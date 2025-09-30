@@ -1,0 +1,78 @@
+{
+  "generated_at": "2025-09-30T06:02:15.545219Z",
+  "summary": {
+    "total_products": 40,
+    "products_with_datasheet": 17,
+    "products_with_price": 16,
+    "products_with_specifications": 20
+  },
+  "scores": {
+    "average": 13.15,
+    "minimum": 9,
+    "maximum": 18
+  },
+  "top_suppliers": [
+    {
+      "supplier_id": "ferguson_enterprises",
+      "product_count": 10
+    },
+    {
+      "supplier_id": "us_plastic_corp",
+      "product_count": 10
+    },
+    {
+      "supplier_id": "distribution_now",
+      "product_count": 8
+    },
+    {
+      "supplier_id": "airgas",
+      "product_count": 4
+    },
+    {
+      "supplier_id": "wurth_industry",
+      "product_count": 3
+    }
+  ],
+  "common_specifications": [
+    {
+      "spec": "type",
+      "product_count": 9
+    },
+    {
+      "spec": "size_mm",
+      "product_count": 9
+    },
+    {
+      "spec": "max_pressure_psi",
+      "product_count": 8
+    },
+    {
+      "spec": "length_mm",
+      "product_count": 5
+    },
+    {
+      "spec": "glass_transition_c",
+      "product_count": 3
+    },
+    {
+      "spec": "max_temp_c",
+      "product_count": 3
+    },
+    {
+      "spec": "diameter_mm",
+      "product_count": 3
+    },
+    {
+      "spec": "thickness_mm",
+      "product_count": 3
+    },
+    {
+      "spec": "class",
+      "product_count": 3
+    },
+    {
+      "spec": "finish",
+      "product_count": 2
+    }
+  ]
+}
