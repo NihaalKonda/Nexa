@@ -19,7 +19,7 @@ export async function GET(
         companyId: (session.user as any).companyId,
       },
       include: {
-        user: {
+        company: {
           select: {
             id: true,
             name: true,

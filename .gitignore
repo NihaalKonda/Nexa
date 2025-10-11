@@ -92,10 +92,11 @@ logs/
 temp/
 tmp/
 
-# Data files (uncomment if you want to exclude data)
-# data/products.json
-# data/products.csv
-# data/suppliers.json
+# Data files - exclude test and results directories
+data/test*/
+data/results/
+data/*_test*.json
+data/test_*.json
 
 # Cache and backup files
 *.bak

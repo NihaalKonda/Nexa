@@ -101,7 +101,6 @@ export async function POST(req: NextRequest) {
     const rfp = await prisma.rFP.create({
       data: {
         companyId: (session.user as any).companyId,
-        userId: (session.user as any).id,
         title,
         bodyMd: markdown,
         draftJson,

@@ -12,31 +12,18 @@ datasource db {
 }
 
 // Auth models for NextAuth.js
-model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String? @db.Text
-  session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
-}
-
 model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id              String            @id @default(cuid())
+  sessionToken    String            @unique
+  companyId       String
+  expires         DateTime
+  company         Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  sessionTableData SessionTableData[]
+  searchQueries   SearchQuery[]
+  rfps            RFP[]
+  createdAt       DateTime          @default(now())
+
+  @@index([companyId])
 }
 
 model VerificationToken {
@@ -49,77 +36,108 @@ model VerificationToken {
 
 // Main application models
 model Company {
-  id            String        @id @default(cuid())
-  name          String
-  slug          String        @unique
-  city          String?
-  country       String?
-  users         User[]
-  rfps          RFP[]
+  id        String    @id @default(cuid())
+  name      String
+  slug      String    @unique
+  email     String    @unique
+  password  String    // hashed
+  city      String?
+  country   String?
+  sessions  Session[]
+  rfps      RFP[]
   searchQueries SearchQuery[]
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
-model User {
-  id            String        @id @default(cuid())
-  email         String        @unique
-  password      String? // hashed, optional for OAuth users
-  name          String?
-  role          String        @default("member") // member, admin, approver
-  company       Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  companyId     String
-  accounts      Account[]
-  sessions      Session[]
-  rfps          RFP[]
-  searchQueries SearchQuery[]
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+// Supplier database (separate from products)
+model Supplier {
+  id                  String    @id @default(cuid())
+  name                String
+  website             String?
+  contactEmail        String?
+  contactPhone        String?
+  address             String?
+  city                String?
+  country             String?
+  certificationsJson  Json?     @db.JsonB  // ISO, CE, etc.
+  rating              Float?    @default(0)
+  verified            Boolean   @default(false)
+  description         String?   @db.Text
+  products            Product[]
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([name])
+  @@index([country])
+  @@index([verified])
 }
 
+// Products linked to Suppliers (relational)
 model Product {
-  id                  String   @id @default(cuid())
-  supplierId          String?
+  id                  String    @id @default(cuid())
+  supplier            Supplier  @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  supplierId          String
   name                String
   sku                 String?
   mpn                 String?
   priceText           String?
   currency            String?
   unit                String?
-  specsJson           Json?    @db.JsonB
-  certificationsJson  Json?    @db.JsonB
+  specsJson           Json?     @db.JsonB
+  certificationsJson  Json?     @db.JsonB
   sourceUrl           String?
-  lastSeenAt          DateTime @default(now())
+  imageUrl            String?
+  description         String?   @db.Text
+  lastSeenAt          DateTime  @default(now())
   score               Float?
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  inStock             Boolean   @default(true)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   @@index([supplierId])
   @@index([name])
   @@index([sku])
   @@index([mpn])
+  @@index([inStock])
+}
+
+// Session-based table data storage (for persisting UI state)
+model SessionTableData {
+  id            String   @id @default(cuid())
+  session       Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId     String
+  tableKey      String   // e.g., "product_search_results", "rfp_list", "supplier_list"
+  data          Json     @db.JsonB  // Stores table rows, filters, sort, pagination state
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([sessionId])
+  @@index([tableKey])
+  @@unique([sessionId, tableKey])
 }
 
 model SearchQuery {
   id          String   @id @default(cuid())
   company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
   companyId   String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId      String
+  session     Session? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  sessionId   String?
   query       String
   filtersJson Json?    @db.JsonB
+  resultsCount Int?
   createdAt   DateTime @default(now())
 
   @@index([companyId])
-  @@index([userId])
+  @@index([sessionId])
 }
 
 model RFP {
   id         String     @id @default(cuid())
   company    Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
   companyId  String
-  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId     String
+  session    Session?   @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  sessionId  String?
   title      String
   bodyMd     String     @db.Text
   draftJson  Json       @db.JsonB
@@ -129,7 +147,7 @@ model RFP {
   updatedAt  DateTime   @updatedAt
 
   @@index([companyId])
-  @@index([userId])
+  @@index([sessionId])
   @@index([status])
 }
 

@@ -1,11 +1,9 @@
 import { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
-import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "./db"
 import bcrypt from "bcryptjs"
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma) as any,
   session: {
     strategy: "jwt",
   },
@@ -25,22 +23,19 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Invalid credentials")
         }
 
-        const user = await prisma.user.findUnique({
+        const company = await prisma.company.findUnique({
           where: {
             email: credentials.email,
           },
-          include: {
-            company: true,
-          },
         })
 
-        if (!user || !user.password) {
+        if (!company || !company.password) {
           throw new Error("Invalid credentials")
         }
 
         const isCorrectPassword = await bcrypt.compare(
           credentials.password,
-          user.password
+          company.password
         )
 
         if (!isCorrectPassword) {
@@ -48,10 +43,9 @@ export const authOptions: NextAuthOptions = {
         }
 
         return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          companyId: user.companyId,
+          id: company.id,
+          email: company.email,
+          name: company.name,
         }
       },
     }),
@@ -60,14 +54,17 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id
-        token.companyId = (user as any).companyId
+        token.email = user.email
+        token.name = user.name
       }
       return token
     },
     async session({ session, token }) {
       if (session.user) {
         (session.user as any).id = token.id
-        ;(session.user as any).companyId = token.companyId
+        ;(session.user as any).companyId = token.id // Company ID is the same as user ID now
+        session.user.email = token.email as string
+        session.user.name = token.name as string
       }
       return session
     },

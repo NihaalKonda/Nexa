@@ -27,12 +27,23 @@ export async function POST(req: NextRequest) {
       where.supplierId = filters.supplierId
     }
 
-    // Get products with pagination
+    // Get products with pagination and include supplier info
     const [products, total] = await Promise.all([
       prisma.product.findMany({
         where,
         skip: (page - 1) * limit,
         take: limit,
+        include: {
+          supplier: {
+            select: {
+              id: true,
+              name: true,
+              verified: true,
+              rating: true,
+              country: true,
+            },
+          },
+        },
         orderBy: [
           { score: "desc" },
           { createdAt: "desc" },
@@ -45,9 +56,9 @@ export async function POST(req: NextRequest) {
     await prisma.searchQuery.create({
       data: {
         companyId: (session.user as any).companyId,
-        userId: (session.user as any).id,
         query: query || "",
         filtersJson: filters || {},
+        resultsCount: total,
       },
     })
 
