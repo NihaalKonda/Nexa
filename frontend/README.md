@@ -54,33 +54,65 @@ Visit [http://localhost:3000](http://localhost:3000)
 frontend/
 ├── src/
 │   ├── app/                    # Next.js App Router pages
-│   │   ├── (public)/          # Public pages (landing, pricing)
-│   │   ├── auth/              # Authentication pages
-│   │   ├── dashboard/         # Protected dashboard pages
-│   │   └── api/               # API routes
+│   │   ├── page.tsx           # Landing page ✅
+│   │   ├── search/            # Product search page ✅
+│   │   ├── dashboard/         # Protected dashboard pages ✅
+│   │   └── api/               # API routes ✅
 │   ├── components/            # React components
 │   │   └── ui/                # shadcn/ui components
 │   ├── lib/                   # Utilities and configs
-│   │   ├── auth.ts           # NextAuth configuration
-│   │   ├── db.ts             # Prisma client
-│   │   ├── supabase.ts       # Supabase client
-│   │   └── utils.ts          # Helper functions
+│   │   ├── auth.ts           # NextAuth configuration (Company-based) ✅
+│   │   ├── db.ts             # Prisma client ✅
+│   │   ├── supabase.ts       # Supabase client ✅
+│   │   └── utils.ts          # Helper functions ✅
 │   ├── hooks/                 # Custom React hooks
 │   ├── types/                 # TypeScript types
 │   └── generated/             # Generated files (Prisma)
 ├── prisma/
-│   └── schema.prisma          # Database schema
+│   └── schema.prisma          # Database schema (9 tables) ✅
 ├── public/                    # Static assets
 └── .env                       # Environment variables (not committed)
 ```
 
-## Key Features
+## Current Features (Working)
 
-- **Smart Product Search**: Search thousands of industrial products
-- **AI RFP Generation**: Generate professional RFPs with AI
-- **Multi-tenant**: Company-scoped data with RLS
-- **Authentication**: Email/password + OAuth support
-- **Type-safe**: End-to-end TypeScript with Prisma
+### ✅ Product Search Page (`/search`)
+- **Real-time search** with live filtering
+- **5 sample products** (valves, pipes, motors, hydraulic cylinders, fasteners)
+- **Modern UI** with Space Grotesk and JetBrains Mono fonts
+- **Product cards** showing:
+  - Supplier info with verified badges
+  - Ratings and country
+  - Certifications (ISO 9001, CE, UL, NEMA, etc.)
+  - Pricing per unit
+  - Stock status indicators
+- **Responsive design** (mobile + desktop grid)
+- **Search filters**: Name, SKU, MPN, supplier, description
+
+### ✅ Database Schema (Supabase)
+- **Company** - Company-based authentication (no separate User model)
+- **Supplier** - Separate supplier database with ratings, certifications, verification
+- **Product** - Products linked to Suppliers (relational foreign key)
+- **Session** - NextAuth sessions linked to Company
+- **SessionTableData** - Persist UI state per session
+- **SearchQuery** - Search history tracking
+- **RFP** - Request for Proposals
+- **RFPShare** - Shareable RFP links
+- **VerificationToken** - Email verification
+
+See [SCHEMA_CHANGES.md](./SCHEMA_CHANGES.md) for detailed schema documentation.
+
+### ✅ Authentication
+- Company-based auth (no separate users)
+- NextAuth.js with JWT strategy
+- Password hashing with bcrypt
+
+### 🚧 Coming Soon
+- Auth pages (signin/signup) - Use v0.dev to generate
+- RFP builder with AI
+- Supplier management
+- Real product data from backend
+- Search filters sidebar
 
 ## Development
 
