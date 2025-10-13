@@ -1,10 +1,14 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useSession, signOut } from "next-auth/react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { searchSuppliers, searchSuppliersDetailed, type Supplier } from "@/lib/api"
 
 export default function SearchGPTPage() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
   const [product, setProduct] = useState("")
   const [location, setLocation] = useState("")
   const [priceMin, setPriceMin] = useState("")
@@ -13,6 +17,97 @@ export default function SearchGPTPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [useDetailed, setUseDetailed] = useState(false)
+  const [loadingSession, setLoadingSession] = useState(false)
+  const [successMessage, setSuccessMessage] = useState("")
+
+  // Redirect to signin if not authenticated
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/auth/signin")
+    }
+  }, [status, router])
+
+  // Function to load last session
+  const handleLoadLastSession = async () => {
+    setLoadingSession(true)
+    setError("")
+
+    try {
+      const response = await fetch("/api/search-queries")
+      const data = await response.json()
+
+      console.log("Load last session response:", data) // Debug log
+
+      if (data.success && data.searchQuery && data.searchQuery.filters) {
+        const filters = data.searchQuery.filters as any
+        console.log("Filters:", filters) // Debug log
+
+        // Restore search parameters
+        setProduct(filters.product || "")
+        setLocation(filters.location || "")
+        setPriceMin(filters.priceMin?.toString() || "")
+        setPriceMax(filters.priceMax?.toString() || "")
+
+        // Restore search results if they exist
+        if (filters.results && Array.isArray(filters.results)) {
+          setSuppliers(filters.results)
+          console.log("Loaded results:", filters.results.length) // Debug log
+        } else {
+          setSuppliers([])
+        }
+
+        // Show success message
+        setSuccessMessage(`Session loaded successfully! ${filters.results?.length || 0} results restored.`)
+        setTimeout(() => setSuccessMessage(""), 3000)
+      } else {
+        setError("No previous session found")
+      }
+    } catch (err) {
+      console.error("Load session error:", err) // Debug log
+      setError("Failed to load last session")
+    } finally {
+      setLoadingSession(false)
+    }
+  }
+
+  // Function to save search query with results
+  const saveSearchQuery = async (searchResults: Supplier[]) => {
+    try {
+      await fetch("/api/search-queries", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          product,
+          location,
+          priceMin: parseFloat(priceMin) || 0,
+          priceMax: parseFloat(priceMax) || 10000,
+          resultsCount: searchResults.length,
+          results: searchResults, // Save the actual results
+        }),
+      })
+    } catch (err) {
+      console.error("Failed to save search query:", err)
+    }
+  }
+
+  // Show loading while checking auth
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
+          <p className="mt-4 text-slate-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Don't render page if not authenticated
+  if (!session) {
+    return null
+  }
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -33,6 +128,8 @@ export default function SearchGPTPage() {
 
       if (response.success) {
         setSuppliers(response.suppliers)
+        // Save the search query and results to database
+        await saveSearchQuery(response.suppliers)
       } else {
         setError(response.error || "Failed to search suppliers")
       }
@@ -51,7 +148,7 @@ export default function SearchGPTPage() {
           <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             Nexa
           </Link>
-          <nav className="flex gap-6">
+          <nav className="flex gap-6 items-center">
             <Link href="/search" className="text-sm font-medium hover:text-blue-600 transition-colors">
               Search
             </Link>
@@ -61,6 +158,16 @@ export default function SearchGPTPage() {
             <Link href="/dashboard" className="text-sm font-medium hover:text-blue-600 transition-colors">
               Dashboard
             </Link>
+            <div className="h-4 w-px bg-slate-300"></div>
+            <span className="text-sm text-slate-600">{session.user?.name}</span>
+            <button
+              onClick={() => {
+                signOut({ callbackUrl: "/" })
+              }}
+              className="text-sm font-medium text-red-600 hover:text-red-700 transition-colors"
+            >
+              Sign Out
+            </button>
           </nav>
         </div>
       </header>
@@ -69,12 +176,36 @@ export default function SearchGPTPage() {
         {/* Search Form */}
         <div className="max-w-4xl mx-auto mb-12">
           <div className="bg-white rounded-2xl shadow-xl p-8 border border-slate-200">
-            <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
-              GPT-Powered Supplier Search
-            </h1>
-            <p className="text-slate-600 mb-6">
-              Search for suppliers using AI-powered web search with government contracts and reviews
-            </p>
+            <div className="flex justify-between items-start mb-6">
+              <div>
+                <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
+                  GPT-Powered Supplier Search
+                </h1>
+                <p className="text-slate-600">
+                  Search for suppliers using AI-powered web search with government contracts and reviews
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleLoadLastSession}
+                disabled={loadingSession}
+                className="px-4 py-2 text-sm font-medium text-blue-600 border-2 border-blue-600 rounded-lg hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+              >
+                {loadingSession ? "Loading..." : "Load Last Session"}
+              </button>
+            </div>
+
+            {successMessage && (
+              <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
+                {successMessage}
+              </div>
+            )}
+
+            {error && (
+              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                {error}
+              </div>
+            )}
 
             <form onSubmit={handleSearch} className="space-y-4">
               <div>
