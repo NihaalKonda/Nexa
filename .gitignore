@@ -92,11 +92,8 @@ logs/
 temp/
 tmp/
 
-# Data files - exclude test and results directories
-data/test*/
-data/results/
-data/*_test*.json
-data/test_*.json
+# Generated CSV files from backend
+*.csv
 
 # Cache and backup files
 *.bak

@@ -58,21 +58,70 @@ def search_suppliers(product, location, price_min, price_max):
     Up to 30 suppliers - as many as possible.
     """
 
-    response = client.responses.create(
-        model="gpt-4.1",
-        input=query,
-        tools=[{"type": "web_search_preview_2025_03_11"}],
-        max_output_tokens=2500,
-        store=True,
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant that searches for suppliers and returns valid JSON."},
+            {"role": "user", "content": query}
+        ],
+        max_tokens=2500,
+        temperature=0.7,
     )
 
-    text = response.output_text
+    text = response.choices[0].message.content
+
+    # Try to extract JSON from the response
     try:
+        # First, try to parse the entire response as JSON
         suppliers = json.loads(text)
     except Exception:
-        print("⚠️ Could not parse GPT output; returning raw text.")
-        suppliers = [{"raw_text": text}]
-    return suppliers
+        # If that fails, try to find JSON within the text (GPT might add explanation text)
+        import re
+        json_match = re.search(r'\[.*\]', text, re.DOTALL)
+        if json_match:
+            try:
+                suppliers = json.loads(json_match.group(0))
+            except Exception:
+                print("⚠️ Could not parse GPT output; returning formatted error.")
+                suppliers = [{
+                    "name": "Error: Could not parse supplier data",
+                    "location": "N/A",
+                    "product_title": "N/A",
+                    "units_sold": "N/A",
+                    "price_range": "N/A",
+                    "website": "N/A",
+                    "contact": "N/A",
+                    "description": text[:200] + "..." if len(text) > 200 else text
+                }]
+        else:
+            print("⚠️ No JSON found in GPT output; returning formatted error.")
+            suppliers = [{
+                "name": "Error: No supplier data found",
+                "location": "N/A",
+                "product_title": "N/A",
+                "units_sold": "N/A",
+                "price_range": "N/A",
+                "website": "N/A",
+                "contact": "N/A",
+                "description": "The AI could not find suppliers matching your criteria. Try adjusting your search parameters."
+            }]
+
+    # Ensure all suppliers have required fields
+    formatted_suppliers = []
+    for supplier in suppliers:
+        if isinstance(supplier, dict):
+            formatted_suppliers.append({
+                "name": supplier.get("name", "Unknown Supplier"),
+                "location": supplier.get("location", "N/A"),
+                "product_title": supplier.get("product_title", "N/A"),
+                "units_sold": supplier.get("units_sold", "N/A"),
+                "price_range": supplier.get("price_range", "N/A"),
+                "website": supplier.get("website", "N/A"),
+                "contact": supplier.get("contact", "N/A"),
+                "description": supplier.get("description", "No description available")
+            })
+
+    return formatted_suppliers if formatted_suppliers else suppliers
 
 
 # ============================================================
@@ -117,13 +166,16 @@ def fetch_web_reviews(company_name, location):
     Return a concise 2–4 sentence summary.
     """
     try:
-        response = client.responses.create(
-            model="gpt-4.1-mini",
-            input=query,
-            tools=[{"type": "web_search_preview_2025_03_11"}],
-            max_output_tokens=400,
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant that searches for company reviews and reputation information."},
+                {"role": "user", "content": query}
+            ],
+            max_tokens=400,
+            temperature=0.7,
         )
-        return response.output_text.strip()
+        return response.choices[0].message.content.strip()
     except Exception as e:
         return f"Error fetching reviews: {e}"
 

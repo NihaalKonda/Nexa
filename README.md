@@ -1,272 +1,228 @@
-# Nexa - Location-Based Supplier Discovery & Product Intelligence
+# Nexa - AI-Powered Supplier Discovery Platform
 
-A comprehensive pipeline for discovering suppliers in specific locations and extracting product insights from their websites.
+A modern platform for discovering suppliers using GPT-4 powered web search, with government contract integration and online reputation analysis.
 
 ## 🚀 Quick Start
 
+### Backend Setup
+
 ```bash
-# 1. Activate environment
-source /Users/ankitnakhawa/miniconda3/bin/activate osh-testing-env
+# 1. Install dependencies
+pip install -r requirements.txt
 
-# 2. Run the pipeline
-python pipeline.py \
-  --keywords "industrial plastic supplier" \
-  --location "37.7749,-122.4194" \
-  --max-suppliers 10 \
-  --max-pages 5
+# 2. Configure your OpenAI API key
+cp .env.example .env
+# Edit .env and add your OPENAI_API_KEY
 
-# 3. View results
-cat data/results/summary.json
+# 3. Start the backend
+python app.py
 ```
+
+Backend runs on: `http://localhost:5000`
+
+### Frontend Setup
+
+```bash
+# 1. Navigate to frontend
+cd frontend
+
+# 2. Install dependencies
+npm install
+
+# 3. Start the development server
+npm run dev
+```
+
+Frontend runs on: `http://localhost:3000`
+
+Visit: `http://localhost:3000/search-gpt` for the AI-powered search
 
 ## 📋 What It Does
 
-1. **Location-Based Discovery**: Finds suppliers near any location using Google Places API with intelligent keyword optimization
-2. **Smart Crawling**: Respects robots.txt, discovers products via sitemaps
-3. **Product Extraction**: Pulls product names, specs, prices, descriptions
-4. **Relevance Scoring**: Ranks products by keyword relevance
-5. **Structured Output**: Generates JSON, CSV, and summary reports
+1. **GPT-4 Web Search**: AI-powered supplier discovery using OpenAI's web search
+2. **Government Contracts**: Fetches past contracts from USASpending.gov API
+3. **Online Reviews**: Aggregates supplier reviews and reputation data
+4. **REST API**: Clean API endpoints for frontend integration
+5. **Modern UI**: Next.js frontend with beautiful search interface
 
 ## 🎯 Features
 
-### Intelligent Keyword Mapping
-The pipeline automatically maps your keywords to relevant business types:
-- `"industrial"` → hardware stores, industrial suppliers
-- `"electronics"` → electronics stores, component distributors
-- `"plastic"` → material suppliers, hardware stores
-- And 30+ more keyword mappings...
+### AI-Powered Search
+- Natural language product queries
+- Location-based supplier discovery
+- Price range filtering
+- Real-time web search results
 
-### Complete Integration
-- Seamless integration with existing procurement workflows
-- Respects website robots.txt and rate limits
-- Configurable delays and politeness controls
-- Comprehensive error handling and logging
+### Supplier Intelligence
+- **Government Contract History**: View past government contracts for each supplier
+- **Online Reputation**: Reviews from Google, Yelp, BBB, and industry sources
+- **Contact Information**: Direct website and contact details
+- **Product Specifications**: Detailed product info with pricing and units
 
-## 📦 Installation
+### Modern Architecture
+- **Backend**: Flask REST API with OpenAI integration
+- **Frontend**: Next.js 15 with React 19 and TypeScript
+- **Database**: Supabase with Prisma ORM
+- **Authentication**: NextAuth.js
 
-### Using Conda (Recommended)
+## 💡 Example Search
+
+Search for:
+- Product: "aluminum sheets"
+- Location: "Buffalo, New York"
+- Price Range: $50 - $300
+
+Results include:
+- 10-30 relevant suppliers
+- Product specifications and pricing
+- Government contract history
+- Online reviews and reputation
+
+## 🔧 API Endpoints
+
+### Health Check
 ```bash
-conda env create -f environment.yml
-conda activate osh-testing-env
+GET /api/health
 ```
 
-### Using pip
+### Search Suppliers (Fast)
 ```bash
-pip install requests beautifulsoup4 tldextract python-dateutil pint nltk
+POST /api/search
+{
+  "product": "aluminum sheets",
+  "location": "Buffalo, New York",
+  "price_min": 50,
+  "price_max": 300
+}
 ```
 
-## 🔧 Usage
-
-### Basic Usage
+### Search with Details (Includes Contracts & Reviews)
 ```bash
-python pipeline.py \
-  --keywords "your search keywords" \
-  --location "LAT,LNG"
+POST /api/search/detailed
+{
+  "product": "aluminum sheets",
+  "location": "Buffalo, New York",
+  "price_min": 50,
+  "price_max": 300
+}
 ```
 
-### All Options
+### Get Company Contracts
 ```bash
-python pipeline.py \
-  --keywords "industrial components"  # What to search for (required)
-  --location "37.7749,-122.4194"     # Where to search (required)
-  --radius 50000                      # Search radius in meters (default: 50000)
-  --max-suppliers 10                  # Max suppliers to process (default: 10)
-  --max-pages 5                       # Max pages per supplier (default: 5)
-  --delay 1.0                         # Politeness delay in seconds (default: 1.0)
-  --output-dir data/results           # Output directory (default: data/results)
+GET /api/contracts/{company_name}
 ```
 
-### Finding Locations
-
-Get coordinates from Google Maps:
-1. Go to [maps.google.com](https://maps.google.com)
-2. Right-click on your desired location
-3. Click the coordinates to copy
-
-Common US cities:
-- San Francisco: `37.7749,-122.4194`
-- New York: `40.7128,-74.0060`
-- Los Angeles: `34.0522,-118.2437`
-- Chicago: `41.8781,-87.6298`
-
-## 📊 Output
-
-The pipeline generates:
-
-```
-data/results/
-├── suppliers.json         # All discovered suppliers
-├── products.json          # Extracted products (full details)
-├── products.csv           # Products in CSV format
-├── summary.json           # Quick stats and top products
-└── pipeline_stats.json    # Execution metrics
-```
-
-## 💡 Examples
-
-### Find Electronics Distributors in NYC
+### Get Company Reviews
 ```bash
-python pipeline.py \
-  --keywords "electronics distributor components" \
-  --location "40.7128,-74.0060" \
-  --radius 50000 \
-  --max-suppliers 10 \
-  --output-dir data/nyc_electronics
+POST /api/reviews
+{
+  "company_name": "Industrial Parts Co.",
+  "location": "Buffalo, New York"
+}
 ```
 
-### Find Plastic Suppliers in Bay Area
-```bash
-python pipeline.py \
-  --keywords "industrial plastic sheets PETG" \
-  --location "37.7749,-122.4194" \
-  --radius 80000 \
-  --max-suppliers 15 \
-  --max-pages 8 \
-  --output-dir data/bayarea_plastics
-```
+## 📁 Project Structure
 
-### Find Hardware Suppliers in Chicago
-```bash
-python pipeline.py \
-  --keywords "hardware supplier industrial tools" \
-  --location "41.8781,-87.6298" \
-  --radius 40000 \
-  --max-suppliers 8 \
-  --output-dir data/chicago_hardware
+```
+Nexa/
+├── app.py                         # Flask backend API
+├── requirements.txt               # Python dependencies
+├── .env                          # Environment variables (API keys)
+├── BACKEND_README.md             # Backend documentation
+├── MIGRATION_NOTES.md            # Migration documentation
+└── frontend/                     # Next.js frontend
+    ├── src/
+    │   ├── app/
+    │   │   ├── search-gpt/      # GPT-powered search page
+    │   │   ├── search/          # Standard search page
+    │   │   └── dashboard/       # Dashboard
+    │   └── lib/
+    │       └── api.ts           # Backend API client
+    ├── package.json
+    └── .env.local               # Frontend config
 ```
 
 ## 🏗️ Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                    pipeline.py                          │
-│              (Main Orchestrator)                        │
+│               Next.js Frontend (Port 3000)              │
+│                    /search-gpt page                     │
+└─────────────────────────────────────────────────────────┘
+                          │
+                          │ HTTP/REST API
+                          ▼
+┌─────────────────────────────────────────────────────────┐
+│               Flask Backend (Port 5000)                 │
+│                      app.py                             │
 └─────────────────────────────────────────────────────────┘
                           │
         ┌─────────────────┼─────────────────┐
         │                 │                 │
         ▼                 ▼                 ▼
 ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
-│   Google     │  │   Existing   │  │   Product    │
-│   Places     │  │   Pipeline   │  │   Scoring    │
-│   Discovery  │  │   Modules    │  │   & Export   │
+│   OpenAI     │  │ USASpending  │  │   Web        │
+│   GPT-4      │  │   API        │  │   Reviews    │
+│   Web Search │  │  (Gov Data)  │  │   Search     │
 └──────────────┘  └──────────────┘  └──────────────┘
-        │                 │                 │
-        ▼                 ▼                 ▼
-   Suppliers         Product URLs      Ranked Results
 ```
 
-### Core Modules
+## 💰 Cost Considerations
 
-- **`pipeline.py`**: Main orchestrator connecting all components
-- **`fetch_suppliers_smart.py`**: Intelligent location-based supplier discovery
-- **`src/keywords.py`**: Keyword expansion and synonym generation
-- **`src/sitemap.py`**: Sitemap-based URL discovery
-- **`src/product_extract.py`**: Product data extraction from pages
-- **`src/specs_normalize.py`**: Specification normalization
-- **`src/scorer.py`**: Product relevance scoring
-- **`src/store.py`**: Data persistence and reporting
+### OpenAI API
+- **Basic search**: ~$0.01-0.05 per search
+- **Detailed search** (with contracts & reviews): ~$0.10-0.30 per search
 
-## 💰 Cost
+### USASpending API
+- **Free** (U.S. Government API)
 
-### Google Places API
-- Text Search: ~$0.032 per request
-- Place Details: ~$0.017 per request
+## 🔒 Security
 
-**Typical run (10 suppliers)**: ~$0.27 USD
-
-**Free tier**: Google provides **$200/month free credit** = ~740 runs/month
-
-### Monitoring Usage
-1. Go to [Google Cloud Console](https://console.cloud.google.com)
-2. Navigate to "Billing" → "Reports"
-3. Filter by "Maps Platform"
-
-## 🛠️ Advanced Usage
-
-### Using Existing Suppliers
-If you have your own supplier list:
-```bash
-python -m src.main crawl \
-  --suppliers data/suppliers.json \
-  --keyword "your search term" \
-  --max-domains 10 \
-  --max-pages 5 \
-  --out-json data/products.json
-```
-
-### Standalone Supplier Discovery
-Just fetch suppliers without crawling:
-```bash
-python fetch_suppliers_smart.py \
-  --keywords "industrial supplier" \
-  --location "37.7749,-122.4194" \
-  --max-results 20 \
-  --output data/my_suppliers.json
-```
-
-## 🐛 Troubleshooting
-
-### No suppliers found
-- Increase `--radius` (e.g., 100000 = 100km)
-- Use more general keywords
-
-### No products extracted
-- Some suppliers block crawlers (robots.txt)
-- Increase `--max-suppliers` to try more options
-- Check `pipeline_stats.json` for details
-
-### Slow performance
-- Reduce `--max-pages` for faster runs
-- Reduce `--max-suppliers`
-- Increase `--delay` if hitting rate limits
+- API keys stored in `.env` file (not committed to git)
+- CORS enabled for frontend communication
+- Environment-based configuration
 
 ## 📚 Documentation
 
-- **[QUICKSTART.md](QUICKSTART.md)**: Quick reference guide
-- **[README_PIPELINE.md](README_PIPELINE.md)**: Detailed pipeline documentation
-- **[ARCHIVE_original_readme.md](ARCHIVE_original_readme.md)**: Original system design
+- **[BACKEND_README.md](BACKEND_README.md)**: Complete backend API documentation
+- **[frontend/README.md](frontend/README.md)**: Frontend development guide
 
-## 📁 Project Structure
+## 🐛 Troubleshooting
 
+### Backend won't start
+- Check that port 5000 is available
+- Verify `OPENAI_API_KEY` is set in `.env`
+- Run: `pip install -r requirements.txt`
+
+### Frontend can't connect to backend
+- Ensure backend is running on port 5000
+- Check `NEXT_PUBLIC_API_URL` in `frontend/.env.local`
+- Verify CORS is enabled in backend
+
+### Slow searches
+- Use basic search (`/api/search`) instead of detailed
+- Basic search is much faster (no contracts/reviews enrichment)
+
+## 🚀 Production Deployment
+
+### Backend
+```bash
+# Use Gunicorn for production
+pip install gunicorn
+gunicorn -w 4 -b 0.0.0.0:5000 app:app
 ```
-Nexa/
-├── pipeline.py                    # Main consolidated pipeline
-├── fetch_suppliers_smart.py       # Smart supplier discovery
-├── environment.yml                # Conda environment
-├── requirements.txt               # Pip requirements
-├── src/                          # Core modules
-│   ├── main.py                   # CLI orchestrator
-│   ├── keywords.py               # Keyword expansion
-│   ├── discovery_seed.py         # Supplier seeding
-│   ├── sitemap.py                # URL discovery
-│   ├── product_extract.py        # Product extraction
-│   ├── specs_normalize.py        # Spec normalization
-│   ├── scorer.py                 # Product scoring
-│   └── store.py                  # Data storage
-└── data/                         # Data directory
-    ├── suppliers.json            # Current suppliers
-    ├── products.json             # Extracted products
-    └── results/                  # Pipeline outputs
+
+### Frontend
+```bash
+cd frontend
+npm run build
+npm start
 ```
-
-## 🤝 Contributing
-
-This is a production-ready pipeline. Key principles:
-- Respect robots.txt and site terms
-- Use appropriate delays between requests
-- Handle errors gracefully
-- Generate structured, queryable output
 
 ## 📄 License
 
 [Add your license here]
 
-## 🔗 Related Projects
-
-- Original design: [ARCHIVE_original_readme.md](ARCHIVE_original_readme.md)
-- Google Places API: [Documentation](https://developers.google.com/maps/documentation/places/web-service/overview)
-
 ---
 
-**Need help?** See [QUICKSTART.md](QUICKSTART.md) for quick reference or [README_PIPELINE.md](README_PIPELINE.md) for detailed documentation.
+**Need help?** See [BACKEND_README.md](BACKEND_README.md) for detailed API documentation.
