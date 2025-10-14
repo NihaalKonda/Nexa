@@ -153,7 +153,7 @@ export default function SearchGPTPage() {
               Search
             </Link>
             <Link href="/search-gpt" className="text-sm font-medium text-blue-600">
-              GPT Search
+              AI Search
             </Link>
             <Link href="/dashboard" className="text-sm font-medium hover:text-blue-600 transition-colors">
               Dashboard
@@ -179,7 +179,7 @@ export default function SearchGPTPage() {
             <div className="flex justify-between items-start mb-6">
               <div>
                 <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
-                  GPT-Powered Supplier Search
+                  AI-Powered Supplier Search
                 </h1>
                 <p className="text-slate-600">
                   Search for suppliers using AI-powered web search with government contracts and reviews
