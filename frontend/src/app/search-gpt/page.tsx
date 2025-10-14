@@ -149,9 +149,6 @@ export default function SearchGPTPage() {
             Nexa
           </Link>
           <nav className="flex gap-6 items-center">
-            <Link href="/search" className="text-sm font-medium hover:text-blue-600 transition-colors">
-              Search
-            </Link>
             <Link href="/search-gpt" className="text-sm font-medium text-blue-600">
               AI Search
             </Link>
@@ -284,12 +281,6 @@ export default function SearchGPTPage() {
                 {loading ? "Searching..." : "Search Suppliers"}
               </button>
             </form>
-
-            {error && (
-              <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
-                {error}
-              </div>
-            )}
           </div>
         </div>
 
@@ -318,8 +309,19 @@ export default function SearchGPTPage() {
                         <p className="text-slate-600 mt-1">{supplier.location}</p>
                       </div>
                       <div className="text-right">
-                        <div className="text-xl font-bold text-blue-600">
-                          {supplier.price_range}
+                        {supplier.score !== undefined && (
+                          <div className="mb-2">
+                            <span className="text-sm text-slate-600">Score: </span>
+                            <span className="text-lg font-bold text-blue-600">
+                              {supplier.score}/100
+                            </span>
+                          </div>
+                        )}
+                        <div>
+                          <span className="text-sm text-slate-600">Price: </span>
+                          <span className="text-lg font-bold text-blue-600">
+                            {supplier.price_range}
+                          </span>
                         </div>
                       </div>
                     </div>
