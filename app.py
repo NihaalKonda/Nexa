@@ -1,12 +1,23 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from openai import OpenAI
-import requests, json, pandas as pd, time
+import requests, json, pandas as pd, time, re
 import os
 from dotenv import load_dotenv
+from geopy.geocoders import Nominatim
+from geopy.distance import geodesic
+import numpy as np
+import nltk
+from nltk.sentiment import SentimentIntensityAnalyzer
 
 # Load environment variables
 load_dotenv()
+
+# Download VADER lexicon for sentiment analysis (only runs once if not already downloaded)
+try:
+    nltk.data.find('sentiment/vader_lexicon.zip')
+except LookupError:
+    nltk.download('vader_lexicon', quiet=True)
 
 # ============================================================
 # 1. FLASK APP SETUP
@@ -23,6 +34,9 @@ client = OpenAI(
 
 USASPENDING_URL = "https://api.usaspending.gov/api/v2/search/spending_by_award/"
 
+# Initialize VADER sentiment analyzer
+sentiment_analyzer = SentimentIntensityAnalyzer()
+
 
 # ============================================================
 # 3. GPT SEARCH FOR SUPPLIERS
@@ -32,6 +46,7 @@ def search_suppliers(product, location, price_min, price_max):
     Search the web for suppliers that sell **{product}** in **{location}**.
     Include local manufacturers, distributors, and wholesalers.
     Prefer suppliers offering prices between ${price_min} and ${price_max}.
+    If you can't find suppliers or are unsure, return none.
 
     For each supplier, include:
     - 'product_title': the specific item or SKU (e.g., "5052-H32 Aluminum Sheet 4x8")
@@ -82,29 +97,11 @@ def search_suppliers(product, location, price_min, price_max):
             try:
                 suppliers = json.loads(json_match.group(0))
             except Exception:
-                print("⚠️ Could not parse GPT output; returning formatted error.")
-                suppliers = [{
-                    "name": "Error: Could not parse supplier data",
-                    "location": "N/A",
-                    "product_title": "N/A",
-                    "units_sold": "N/A",
-                    "price_range": "N/A",
-                    "website": "N/A",
-                    "contact": "N/A",
-                    "description": text[:200] + "..." if len(text) > 200 else text
-                }]
+                print("⚠️ Could not parse GPT output; returning empty list.")
+                suppliers = []
         else:
-            print("⚠️ No JSON found in GPT output; returning formatted error.")
-            suppliers = [{
-                "name": "Error: No supplier data found",
-                "location": "N/A",
-                "product_title": "N/A",
-                "units_sold": "N/A",
-                "price_range": "N/A",
-                "website": "N/A",
-                "contact": "N/A",
-                "description": "The AI could not find suppliers matching your criteria. Try adjusting your search parameters."
-            }]
+            print("⚠️ No JSON found in GPT output; returning empty list.")
+            suppliers = []
 
     # Ensure all suppliers have required fields
     formatted_suppliers = []
@@ -132,10 +129,9 @@ def fetch_past_contracts(company_name):
         payload = {
             "filters": {
                 "recipient_search_text": [company_name],
-                "time_period": [{"start_date": "2018-01-01", "end_date": "2025-10-11"}],
                 "award_type_codes": ["A", "B", "C", "D"]
             },
-            "fields": ["Award ID", "Recipient Name", "Award Amount", "Awarding Agency"],
+            "fields": ["Award ID", "Recipient Name", "Award Amount", "Awarding Agency", "Start Date", "End Date"],
             "limit": 3,
             "page": 1
         }
@@ -148,7 +144,14 @@ def fetch_past_contracts(company_name):
         for award in results:
             agency = award.get("Awarding Agency")
             amt = award.get("Award Amount")
-            summary.append(f"{agency}: ${amt:,.0f}")
+            start_date = award.get("Start Date")
+            end_date = award.get("End Date")
+
+            # Only include dates if both are available
+            if start_date and end_date:
+                summary.append(f"{agency}: ${amt:,.0f} ({start_date} - {end_date})")
+            else:
+                summary.append(f"{agency}: ${amt:,.0f}")
         return "; ".join(summary)
     except Exception as e:
         return f"Error: {e}"
@@ -181,7 +184,266 @@ def fetch_web_reviews(company_name, location):
 
 
 # ============================================================
-# 6. COMBINE EVERYTHING
+# 6. RANKING SYSTEM
+# ============================================================
+
+# Initialize geocoder (reuse instance)
+geolocator = Nominatim(user_agent="nexa_supplier_search")
+
+def extract_price_from_range(price_range):
+    """Extract numeric price from price range string"""
+    try:
+        # Extract all numbers from the price range
+        numbers = re.findall(r'\d+\.?\d*', str(price_range))
+        if not numbers:
+            return None
+        # If there's a range, take the average
+        prices = [float(n) for n in numbers]
+        return sum(prices) / len(prices)
+    except:
+        return None
+
+
+def get_embedding(text):
+    """Get OpenAI embedding for text"""
+    try:
+        response = client.embeddings.create(
+            model="text-embedding-3-small",
+            input=text
+        )
+        return response.data[0].embedding
+    except Exception as e:
+        print(f"Error getting embedding: {e}")
+        return None
+
+
+def cosine_similarity(vec1, vec2):
+    """Calculate cosine similarity between two vectors"""
+    if vec1 is None or vec2 is None:
+        return 0.0
+    vec1 = np.array(vec1)
+    vec2 = np.array(vec2)
+    dot_product = np.dot(vec1, vec2)
+    norm1 = np.linalg.norm(vec1)
+    norm2 = np.linalg.norm(vec2)
+    if norm1 == 0 or norm2 == 0:
+        return 0.0
+    return dot_product / (norm1 * norm2)
+
+
+def calculate_location_similarity(supplier_location, target_location):
+    """Calculate location proximity score (0-1) using geodesic distance"""
+    if not supplier_location or supplier_location == "N/A":
+        return 0.3  # Default score for missing location
+
+    try:
+        # Geocode both locations
+        location1 = geolocator.geocode(supplier_location, timeout=5)
+        location2 = geolocator.geocode(target_location, timeout=5)
+
+        if not location1 or not location2:
+            # Fallback to string matching if geocoding fails
+            if supplier_location.lower() == target_location.lower():
+                return 1.0
+            return 0.3
+
+        # Get coordinates
+        coords1 = (location1.latitude, location1.longitude)
+        coords2 = (location2.latitude, location2.longitude)
+
+        # Calculate distance in kilometers
+        distance_km = geodesic(coords1, coords2).km
+
+        # Score based on distance (closer = better)
+        # 0 km = 1.0, 50 km = 0.8, 100 km = 0.6, 200 km = 0.4, 500+ km = 0.1
+        if distance_km == 0:
+            return 1.0
+        elif distance_km < 50:
+            return 1.0 - (distance_km / 50) * 0.2
+        elif distance_km < 100:
+            return 0.8 - ((distance_km - 50) / 50) * 0.2
+        elif distance_km < 200:
+            return 0.6 - ((distance_km - 100) / 100) * 0.2
+        elif distance_km < 500:
+            return 0.4 - ((distance_km - 200) / 300) * 0.3
+        else:
+            return 0.1
+
+    except Exception as e:
+        print(f"Geocoding error: {e}")
+        # Fallback to string matching
+        if supplier_location.lower() == target_location.lower():
+            return 1.0
+        return 0.3
+
+
+def calculate_keyword_similarity(description, product_title, search_product):
+    """Calculate keyword similarity score (0-1) using cosine similarity of embeddings"""
+    if not description or description == "N/A":
+        description = ""
+    if not product_title or product_title == "N/A":
+        product_title = ""
+
+    # Combine description and product title
+    supplier_text = f"{product_title} {description}".strip()
+
+    if not supplier_text or not search_product:
+        return 0.3
+
+    # Get embeddings
+    supplier_embedding = get_embedding(supplier_text)
+    search_embedding = get_embedding(search_product)
+
+    if supplier_embedding is None or search_embedding is None:
+        # Fallback to simple keyword matching
+        text = supplier_text.lower()
+        search_keywords = search_product.lower().split()
+        matches = sum(1 for keyword in search_keywords if keyword in text)
+        return min(matches / len(search_keywords), 1.0) if search_keywords else 0.3
+
+    # Calculate cosine similarity
+    similarity = cosine_similarity(supplier_embedding, search_embedding)
+
+    # Normalize to 0-1 (cosine similarity is already -1 to 1, but typically 0 to 1 for similar content)
+    return max(0.0, min(1.0, similarity))
+
+
+def calculate_contract_score(past_contracts):
+    """Calculate government contract bonus score (0-1)"""
+    if not past_contracts or past_contracts == "None found" or past_contracts == "None":
+        return 0.0
+
+    if "Error" in past_contracts:
+        return 0.0
+
+    # Count number of contracts mentioned (separated by semicolons)
+    contract_count = len(past_contracts.split(';'))
+
+    # More contracts = higher score, max out at 1.0
+    return min(contract_count * 0.3, 1.0)
+
+
+def calculate_review_score(reviews):
+    """Calculate review strength score (0-1) using NLTK VADER sentiment analysis"""
+    if not reviews or reviews == "None":
+        return 0.5  # Neutral score for no reviews
+
+    if "Error" in reviews:
+        return 0.3
+
+    try:
+        # Use VADER sentiment analyzer
+        sentiment_scores = sentiment_analyzer.polarity_scores(reviews)
+
+        # Get compound score (-1 to 1, where -1 is most negative, 1 is most positive)
+        compound_score = sentiment_scores['compound']
+
+        # Normalize compound score to 0-1 range
+        # Compound: -1 to 1 -> normalized: 0 to 1
+        normalized_score = (compound_score + 1) / 2
+
+        return max(0.0, min(1.0, normalized_score))
+
+    except Exception as e:
+        print(f"Error in sentiment analysis: {e}")
+        # Fallback to neutral score
+        return 0.5
+
+
+def rank_suppliers(suppliers, search_product, search_location, price_min, price_max):
+    """
+    Rank suppliers based on multiple criteria and add a score to each.
+
+    Scoring criteria (all normalized to 0-1):
+    - Price proximity (30%): How close to the target price range
+    - Location proximity (25%): How close to the target location (geodesic distance)
+    - Keyword similarity (20%): Product/description match using embeddings
+    - Government contracts (15%): Bonus for having government contracts
+    - Review strength (10%): Quality of reviews/reputation
+
+    Returns suppliers sorted by score (highest first)
+    """
+    target_price_mid = (price_min + price_max) / 2
+    target_price_range = price_max - price_min
+
+    for supplier in suppliers:
+        scores = {
+            'price': 0.0,
+            'location': 0.0,
+            'keywords': 0.0,
+            'contracts': 0.0,
+            'reviews': 0.0
+        }
+
+        # 1. Price proximity score (30%)
+        supplier_price = extract_price_from_range(supplier.get('price_range', ''))
+        if supplier_price:
+            # Calculate how far from target range
+            if price_min <= supplier_price <= price_max:
+                # Perfect - within range
+                price_deviation = abs(supplier_price - target_price_mid) / (target_price_range / 2) if target_price_range > 0 else 0
+                scores['price'] = 1.0 - (price_deviation * 0.3)  # Small penalty for being away from midpoint
+            else:
+                # Outside range - penalize based on distance
+                if supplier_price < price_min:
+                    distance = price_min - supplier_price
+                else:
+                    distance = supplier_price - price_max
+                # Normalize distance (further = lower score)
+                scores['price'] = max(0, 1.0 - (distance / target_price_mid)) if target_price_mid > 0 else 0.3
+        else:
+            scores['price'] = 0.3  # Default for missing price
+
+        # 2. Location proximity score (25%) - using geopy
+        scores['location'] = calculate_location_similarity(
+            supplier.get('location', ''),
+            search_location
+        )
+
+        # 3. Keyword similarity score (20%) - using embeddings
+        scores['keywords'] = calculate_keyword_similarity(
+            supplier.get('description', ''),
+            supplier.get('product_title', ''),
+            search_product
+        )
+
+        # 4. Government contracts bonus (15%)
+        scores['contracts'] = calculate_contract_score(
+            supplier.get('past_contracts', '')
+        )
+
+        # 5. Review strength score (10%)
+        scores['reviews'] = calculate_review_score(
+            supplier.get('reviews_mentions', '')
+        )
+
+        # Calculate weighted total score (0-100)
+        total_score = (
+            scores['price'] * 30 +
+            scores['location'] * 25 +
+            scores['keywords'] * 20 +
+            scores['contracts'] * 15 +
+            scores['reviews'] * 10
+        )
+
+        # Add scores to supplier
+        supplier['score'] = round(total_score, 1)
+        supplier['score_breakdown'] = {
+            'price': round(scores['price'] * 30, 1),
+            'location': round(scores['location'] * 25, 1),
+            'keywords': round(scores['keywords'] * 20, 1),
+            'contracts': round(scores['contracts'] * 15, 1),
+            'reviews': round(scores['reviews'] * 10, 1)
+        }
+
+    # Sort by score (highest first)
+    suppliers.sort(key=lambda x: x.get('score', 0), reverse=True)
+
+    return suppliers
+
+
+# ============================================================
+# 7. COMBINE EVERYTHING
 # ============================================================
 def get_suppliers_with_contracts_and_reviews(product, location, price_min, price_max):
     suppliers = search_suppliers(product, location, price_min, price_max)
@@ -254,10 +516,13 @@ def api_search_suppliers():
         # Get suppliers
         suppliers = search_suppliers(product, location, price_min, price_max)
 
+        # Rank suppliers by score
+        ranked_suppliers = rank_suppliers(suppliers, product, location, price_min, price_max)
+
         return jsonify({
             "success": True,
-            "count": len(suppliers),
-            "suppliers": suppliers
+            "count": len(ranked_suppliers),
+            "suppliers": ranked_suppliers
         })
 
     except Exception as e:
@@ -303,10 +568,13 @@ def api_search_suppliers_detailed():
         # Convert DataFrame to JSON
         suppliers = df.to_dict('records')
 
+        # Rank suppliers by score
+        ranked_suppliers = rank_suppliers(suppliers, product, location, price_min, price_max)
+
         return jsonify({
             "success": True,
-            "count": len(suppliers),
-            "suppliers": suppliers
+            "count": len(ranked_suppliers),
+            "suppliers": ranked_suppliers
         })
 
     except Exception as e:

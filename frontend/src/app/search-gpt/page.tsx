@@ -149,11 +149,8 @@ export default function SearchGPTPage() {
             Nexa
           </Link>
           <nav className="flex gap-6 items-center">
-            <Link href="/search" className="text-sm font-medium hover:text-blue-600 transition-colors">
-              Search
-            </Link>
             <Link href="/search-gpt" className="text-sm font-medium text-blue-600">
-              GPT Search
+              AI Search
             </Link>
             <Link href="/dashboard" className="text-sm font-medium hover:text-blue-600 transition-colors">
               Dashboard
@@ -179,7 +176,7 @@ export default function SearchGPTPage() {
             <div className="flex justify-between items-start mb-6">
               <div>
                 <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
-                  GPT-Powered Supplier Search
+                  AI-Powered Supplier Search
                 </h1>
                 <p className="text-slate-600">
                   Search for suppliers using AI-powered web search with government contracts and reviews
@@ -284,12 +281,6 @@ export default function SearchGPTPage() {
                 {loading ? "Searching..." : "Search Suppliers"}
               </button>
             </form>
-
-            {error && (
-              <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
-                {error}
-              </div>
-            )}
           </div>
         </div>
 
@@ -318,8 +309,19 @@ export default function SearchGPTPage() {
                         <p className="text-slate-600 mt-1">{supplier.location}</p>
                       </div>
                       <div className="text-right">
-                        <div className="text-xl font-bold text-blue-600">
-                          {supplier.price_range}
+                        {supplier.score !== undefined && (
+                          <div className="mb-2">
+                            <span className="text-sm text-slate-600">Score: </span>
+                            <span className="text-lg font-bold text-blue-600">
+                              {supplier.score}/100
+                            </span>
+                          </div>
+                        )}
+                        <div>
+                          <span className="text-sm text-slate-600">Price: </span>
+                          <span className="text-lg font-bold text-blue-600">
+                            {supplier.price_range}
+                          </span>
                         </div>
                       </div>
                     </div>
