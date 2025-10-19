@@ -3,6 +3,8 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import Image from "next/image"
+import { Button } from "@/components/ui/button"
 
 export default function SignUpPage() {
   const router = useRouter()
@@ -70,10 +72,19 @@ export default function SignUpPage() {
       <div className="max-w-md w-full">
         <div className="bg-white rounded-2xl shadow-xl p-8 border border-slate-200">
           <div className="text-center mb-8">
-            <Link href="/" className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Nexa
+            <Link href="/" className="inline-flex items-center gap-3 justify-center mb-4">
+              <Image
+                src="/nexa_logo.png"
+                alt="Nexa Logo"
+                width={40}
+                height={40}
+                className="h-10 w-10"
+              />
+              <span className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+                Nexa
+              </span>
             </Link>
-            <h2 className="mt-4 text-2xl font-bold text-slate-900">Create your account</h2>
+            <h2 className="text-2xl font-bold text-slate-900">Create your account</h2>
             <p className="mt-2 text-sm text-slate-600">
               Join Nexa to streamline your procurement process
             </p>
@@ -172,13 +183,15 @@ export default function SignUpPage() {
               </div>
             </div>
 
-            <button
+            <Button
               type="submit"
               disabled={loading}
-              className="w-full px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-6"
+              variant="hero"
+              size="lg"
+              className="w-full mt-6"
             >
               {loading ? "Creating account..." : "Create account"}
-            </button>
+            </Button>
           </form>
 
           <div className="mt-6 text-center">

@@ -4,6 +4,8 @@ import { useState, useEffect } from "react"
 import { useSession, signOut } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import Image from "next/image"
+import { Button } from "@/components/ui/button"
 import { searchSuppliers, searchSuppliersDetailed, type Supplier } from "@/lib/api"
 
 export default function SearchGPTPage() {
@@ -143,33 +145,40 @@ export default function SearchGPTPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Header */}
-      <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Nexa
-          </Link>
-          <nav className="flex gap-6 items-center">
-            <Link href="/search-gpt" className="text-sm font-medium text-blue-600">
-              AI Search
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100">
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <Link href="/" className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity">
+              <Image
+                src="/nexa_logo.png"
+                alt="Nexa Logo"
+                width={40}
+                height={40}
+                className="h-10 w-10"
+              />
+              <span className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+                Nexa
+              </span>
             </Link>
-            <Link href="/dashboard" className="text-sm font-medium hover:text-blue-600 transition-colors">
-              Dashboard
-            </Link>
-            <div className="h-4 w-px bg-slate-300"></div>
-            <span className="text-sm text-slate-600">{session.user?.name}</span>
-            <button
-              onClick={() => {
-                signOut({ callbackUrl: "/" })
-              }}
-              className="text-sm font-medium text-red-600 hover:text-red-700 transition-colors"
-            >
-              Sign Out
-            </button>
-          </nav>
+
+            <div className="flex items-center gap-6">
+              <span className="text-sm text-slate-600">{session.user?.name}</span>
+              <Button
+                onClick={() => {
+                  signOut({ callbackUrl: "/" })
+                }}
+                variant="ghost"
+                size="sm"
+                className="text-red-600 hover:text-red-700"
+              >
+                Sign Out
+              </Button>
+            </div>
+          </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 pt-24">
         {/* Search Form */}
         <div className="max-w-4xl mx-auto mb-12">
           <div className="bg-white rounded-2xl shadow-xl p-8 border border-slate-200">
@@ -182,14 +191,15 @@ export default function SearchGPTPage() {
                   Search for suppliers using AI-powered web search with government contracts and reviews
                 </p>
               </div>
-              <button
+              <Button
                 type="button"
                 onClick={handleLoadLastSession}
                 disabled={loadingSession}
-                className="px-4 py-2 text-sm font-medium text-blue-600 border-2 border-blue-600 rounded-lg hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                variant="outline"
+                className="whitespace-nowrap"
               >
                 {loadingSession ? "Loading..." : "Load Last Session"}
-              </button>
+              </Button>
             </div>
 
             {successMessage && (
@@ -273,13 +283,15 @@ export default function SearchGPTPage() {
                 </label>
               </div>
 
-              <button
+              <Button
                 type="submit"
                 disabled={loading}
-                className="w-full px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                variant="hero"
+                size="lg"
+                className="w-full"
               >
                 {loading ? "Searching..." : "Search Suppliers"}
-              </button>
+              </Button>
             </form>
           </div>
         </div>
@@ -287,39 +299,39 @@ export default function SearchGPTPage() {
         {/* Results */}
         {suppliers.length > 0 && (
           <div className="max-w-6xl mx-auto">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-slate-900">
+            <div className="mb-8">
+              <h2 className="text-3xl font-bold text-slate-900">
                 Found {suppliers.length} {suppliers.length === 1 ? "supplier" : "suppliers"}
               </h2>
             </div>
 
-            <div className="grid grid-cols-1 gap-6">
+            <div className="grid grid-cols-1 gap-8">
               {suppliers.map((supplier, index) => (
                 <div
                   key={index}
-                  className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all border border-slate-200 overflow-hidden"
+                  className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-slate-200 overflow-hidden"
                 >
-                  <div className="p-6">
+                  <div className="p-8">
                     {/* Header */}
-                    <div className="flex justify-between items-start mb-4">
+                    <div className="flex justify-between items-start mb-6">
                       <div className="flex-1">
-                        <h3 className="text-2xl font-bold text-slate-900">
+                        <h3 className="text-3xl font-bold text-slate-900 mb-2">
                           {supplier.name}
                         </h3>
-                        <p className="text-slate-600 mt-1">{supplier.location}</p>
+                        <p className="text-slate-600 text-lg">{supplier.location}</p>
                       </div>
                       <div className="text-right">
                         {supplier.score !== undefined && (
-                          <div className="mb-2">
+                          <div className="mb-3">
                             <span className="text-sm text-slate-600">Score: </span>
-                            <span className="text-lg font-bold text-blue-600">
+                            <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
                               {supplier.score}/100
                             </span>
                           </div>
                         )}
                         <div>
                           <span className="text-sm text-slate-600">Price: </span>
-                          <span className="text-lg font-bold text-blue-600">
+                          <span className="text-xl font-bold text-blue-600">
                             {supplier.price_range}
                           </span>
                         </div>
@@ -327,8 +339,8 @@ export default function SearchGPTPage() {
                     </div>
 
                     {/* Product Info */}
-                    <div className="mb-4 pb-4 border-b border-slate-100">
-                      <div className="text-lg font-semibold text-slate-800 mb-1">
+                    <div className="mb-6 pb-6 border-b border-slate-200">
+                      <div className="text-xl font-semibold text-slate-800 mb-2">
                         {supplier.product_title}
                       </div>
                       <div className="text-sm text-slate-600">
@@ -337,26 +349,26 @@ export default function SearchGPTPage() {
                     </div>
 
                     {/* Description */}
-                    <p className="text-slate-700 mb-4">{supplier.description}</p>
+                    <p className="text-slate-700 text-base mb-6 leading-relaxed">{supplier.description}</p>
 
                     {/* Contact */}
-                    <div className="mb-4 space-y-2">
+                    <div className="mb-6 space-y-3">
                       {supplier.website && supplier.website !== "N/A" && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <span className="font-medium text-slate-700">Website:</span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-slate-700">Website:</span>
                           <a
                             href={supplier.website}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-blue-600 hover:underline"
+                            className="text-blue-600 hover:text-blue-700 hover:underline font-medium"
                           >
                             {supplier.website}
                           </a>
                         </div>
                       )}
                       {supplier.contact && supplier.contact !== "N/A" && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <span className="font-medium text-slate-700">Contact:</span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-slate-700">Contact:</span>
                           <span className="text-slate-600">{supplier.contact}</span>
                         </div>
                       )}
@@ -364,22 +376,22 @@ export default function SearchGPTPage() {
 
                     {/* Contracts & Reviews (if detailed search) */}
                     {supplier.past_contracts && (
-                      <div className="mb-4 p-4 bg-blue-50 rounded-lg">
-                        <div className="font-medium text-slate-900 mb-2">
+                      <div className="mb-6 p-6 bg-blue-50 border border-blue-100 rounded-xl">
+                        <div className="font-bold text-slate-900 mb-3 text-lg">
                           Government Contracts
                         </div>
-                        <div className="text-sm text-slate-700">
+                        <div className="text-sm text-slate-700 leading-relaxed">
                           {supplier.past_contracts}
                         </div>
                       </div>
                     )}
 
                     {supplier.reviews_mentions && (
-                      <div className="p-4 bg-green-50 rounded-lg">
-                        <div className="font-medium text-slate-900 mb-2">
+                      <div className="p-6 bg-green-50 border border-green-100 rounded-xl">
+                        <div className="font-bold text-slate-900 mb-3 text-lg">
                           Reviews & Mentions
                         </div>
-                        <div className="text-sm text-slate-700">
+                        <div className="text-sm text-slate-700 leading-relaxed">
                           {supplier.reviews_mentions}
                         </div>
                       </div>
