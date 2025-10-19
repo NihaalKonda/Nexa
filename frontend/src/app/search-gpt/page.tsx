@@ -375,7 +375,7 @@ export default function SearchGPTPage() {
                     )}
 
                     {supplier.reviews_mentions && (
-                      <div className="p-4 bg-green-50 rounded-lg">
+                      <div className="mb-4 p-4 bg-green-50 rounded-lg">
                         <div className="font-medium text-slate-900 mb-2">
                           Reviews & Mentions
                         </div>
@@ -384,6 +384,24 @@ export default function SearchGPTPage() {
                         </div>
                       </div>
                     )}
+
+                    {/* Generate RFP Button */}
+                    <button
+                      onClick={() => {
+                        // Encode supplier data in URL params
+                        const params = new URLSearchParams({
+                          supplier: JSON.stringify(supplier),
+                          product,
+                          location,
+                          priceMin,
+                          priceMax,
+                        })
+                        router.push(`/rfp/generate?${params.toString()}`)
+                      }}
+                      className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-medium rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all shadow-md hover:shadow-lg"
+                    >
+                      Generate RFP for {supplier.name}
+                    </button>
                   </div>
                 </div>
               ))}

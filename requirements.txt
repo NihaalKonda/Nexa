@@ -14,6 +14,11 @@ numpy>=1.24.0
 # Geolocation
 geopy>=2.4.0
 
+# RFP Generation Dependencies
+Jinja2>=3.1.0
+pypandoc>=1.11
+markdown>=3.5.0
+
 # Original src/ dependencies (kept for compatibility)
 beautifulsoup4>=4.12.0
 pint>=0.22

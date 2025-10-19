@@ -1,0 +1,69 @@
+# 📝 Request for Proposal (RFP)
+
+## 📌 Project Overview
+**Project Title:** {{ project_title }}  
+**Client:** {{ client_name }}  
+**Industry:** {{ client_industry }}  
+**Date:** {{ rfp_date }}
+
+---
+
+## 1. Introduction
+{{ introduction }}
+
+---
+
+## 2. Scope of Work
+{{ scope_of_work }}
+
+---
+
+## 3. Vendor Qualifications
+{{ qualifications }}
+
+---
+
+## 4. Project Timeline
+{{ timeline }}
+
+| Milestone         | Description              | Target Date |
+|-------------------|---------------------------|-------------|
+| Project Kickoff   | Initial alignment         | {{ timeline_data.kickoff }} |
+| MVP Delivery      | First prototype           | {{ timeline_data.mvp }} |
+| Testing Phase     | QA and user testing       | {{ timeline_data.testing }} |
+| Final Deployment  | Production release        | {{ timeline_data.final }} |
+
+---
+
+## 5. Evaluation Criteria
+{{ evaluation }}
+
+| Criteria              | Weight (%) |
+|-----------------------|------------|
+{% for k,v in evaluation_weights.items() %}
+| {{ k | title }}       | {{ (v*100)|int }}% |
+{% endfor %}
+
+**Non-negotiables:**  
+{% for item in non_negotiables %}
+- {{ item }}
+{% endfor %}
+
+---
+
+## 6. Pricing Details
+{{ pricing }}
+
+**Pricing Guidelines:**
+- Currency: {{ pricing_data.currency }}
+- Contract Length: {{ pricing_data.contract_length }}
+- Required cost categories:
+{% for cat in pricing_data.categories %}
+- {{ cat }}
+{% endfor %}
+
+---
+
+### 🟦 Submission Instructions
+- **Deadline:** {{ submission_deadline }}
+- **Delivery:** {{ submission_email_or_portal }}
