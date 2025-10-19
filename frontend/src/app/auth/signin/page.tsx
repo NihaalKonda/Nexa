@@ -38,7 +38,7 @@ export default function SignInPage() {
       }
 
       if (result?.ok) {
-        router.push("/search-gpt")
+        router.push("/supplier-search")
         router.refresh()
       }
     } catch (err) {

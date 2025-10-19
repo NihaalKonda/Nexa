@@ -162,13 +162,6 @@ export default function SearchGPTPage() {
             </Link>
 
             <div className="flex items-center gap-6">
-              <Link href="/search-gpt" className="text-sm font-medium text-blue-600">
-                AI Search
-              </Link>
-              <Link href="/dashboard" className="text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors">
-                Dashboard
-              </Link>
-              <div className="h-4 w-px bg-gray-200"></div>
               <span className="text-sm text-slate-600">{session.user?.name}</span>
               <Button
                 onClick={() => {

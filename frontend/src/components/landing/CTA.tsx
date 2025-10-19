@@ -25,7 +25,7 @@ const CTA = () => {
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Button>
             </Link>
-            <Link href="/search-gpt">
+            <Link href="/supplier-search">
               <Button variant="outline" size="lg" className="min-w-[200px] border-2">
                 Schedule a Demo
               </Button>
