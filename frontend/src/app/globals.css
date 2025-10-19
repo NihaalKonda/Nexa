@@ -48,3 +48,10 @@ body {
     }
   }
 }
+
+:root {
+  color-scheme: light;
+  --background: #ffffff !important;
+  --foreground: #171717 !important;
+  --gradient-hero: linear-gradient(180deg, #fafafa 0%, #f1f5f9 100%) !important;
+}
