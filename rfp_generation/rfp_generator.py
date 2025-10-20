@@ -91,16 +91,20 @@ def build_customer_context(supplier_data: dict, search_data: dict, rfp_requireme
     delivery_location = rfp_requirements.get("location", search_data.get("location", "specified location"))
     delivery_date = rfp_requirements.get("deliveryDate", "TBD")
     budget = rfp_requirements.get("budget", price_range)
+    project_description = rfp_requirements.get("projectDescription", "")
     standards = rfp_requirements.get("standards", "")
     additional_reqs = rfp_requirements.get("additionalRequirements", "")
     category = rfp_requirements.get("category", search_data.get("product", ""))
 
     # Build introduction context
+    # Use project description if provided, otherwise use default text
+    problem_statement = project_description if project_description else f"We require a reliable and qualified supplier for {product_title}. Our operations depend on consistent quality, timely delivery, and competitive pricing for this critical material/product."
+
     introduction_context = {
         "company": client_name,
-        "industry": f"{category} procurement and supply chain management",
+        "industry": f"{category} services",
         "size": "Mid-sized enterprise",
-        "problem": f"We require a reliable and qualified supplier for {product_title}. Our operations depend on consistent quality, timely delivery, and competitive pricing for this critical material/product.",
+        "problem": problem_statement,
         "goals": f"Establish a long-term strategic partnership with {supplier_name} to supply {product_title} to our {delivery_location} location. Target budget: {budget}. Expected delivery: {delivery_date}.",
         "history": f"We are currently evaluating {supplier_name} based on their expertise in {category}. {supplier_description if supplier_description else 'We seek a supplier with proven track record and industry certifications.'}"
     }

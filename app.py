@@ -30,8 +30,10 @@ CORS(app, resources={
         "origins": [
             "http://localhost:3000",
             "http://localhost:3001",
+            "http://localhost:5001",
             "http://127.0.0.1:3000",
             "http://127.0.0.1:3001",
+            "http://127.0.0.1:5001",
             "http://10.173.105.175:3000",
             "http://10.173.105.175:3001"
         ],
@@ -692,11 +694,17 @@ def api_generate_rfp():
         search_data = data.get('search_data', {})
         rfp_requirements = data.get('rfp_requirements', {})
 
-        # Validate required fields
-        if not supplier_data:
-            return jsonify({
-                "error": "Supplier data is required"
-            }), 400
+        # Create default supplier if none provided
+        if not supplier_data or supplier_data is None:
+            supplier_data = {
+                "name": "To Be Determined",
+                "location": rfp_requirements.get('location', 'N/A'),
+                "product_title": search_data.get('product', rfp_requirements.get('title', 'Product')),
+                "price_range": rfp_requirements.get('budget', 'N/A'),
+                "website": "N/A",
+                "contact": "N/A",
+                "description": "Supplier to be determined through RFP process"
+            }
 
         if not rfp_requirements.get('title'):
             return jsonify({

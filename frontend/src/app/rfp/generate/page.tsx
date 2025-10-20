@@ -13,10 +13,11 @@ export default function GenerateRFPPage() {
 
   const [supplier, setSupplier] = useState<Supplier | null>(null)
   const [title, setTitle] = useState("")
-  const [category, setCategory] = useState("")
+  const [industry, setIndustry] = useState("")
   const [location, setLocation] = useState("")
   const [deliveryDate, setDeliveryDate] = useState("")
   const [budget, setBudget] = useState("")
+  const [projectDescription, setProjectDescription] = useState("")
   const [standards, setStandards] = useState("")
   const [additionalRequirements, setAdditionalRequirements] = useState("")
   const [loading, setLoading] = useState(false)
@@ -43,7 +44,7 @@ export default function GenerateRFPPage() {
         const parsedSupplier = JSON.parse(supplierParam)
         setSupplier(parsedSupplier)
         setTitle(`RFP for ${parsedSupplier.product_title || productParam}`)
-        setCategory(productParam || "")
+        setIndustry(productParam || "")
         setLocation(locationParam || parsedSupplier.location || "")
 
         if (priceMinParam && priceMaxParam) {
@@ -90,17 +91,18 @@ export default function GenerateRFPPage() {
         body: JSON.stringify({
           supplier: supplier,
           search_data: {
-            product: searchParams.get("product") || category,
+            product: searchParams.get("product") || industry,
             location: searchParams.get("location") || location,
             priceMin: searchParams.get("priceMin") || "",
             priceMax: searchParams.get("priceMax") || "",
           },
           rfp_requirements: {
             title,
-            category,
+            industry,
             location,
             deliveryDate,
             budget,
+            projectDescription,
             standards: standards,
             additionalRequirements,
             client_name: "Nexa",
@@ -240,12 +242,12 @@ export default function GenerateRFPPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Category
+                    Industry
                   </label>
                   <input
                     type="text"
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
+                    value={industry}
+                    onChange={(e) => setIndustry(e.target.value)}
                     placeholder="e.g., Industrial Materials"
                     className="w-full px-4 py-3 border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
                   />
@@ -292,6 +294,20 @@ export default function GenerateRFPPage() {
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Project Description
+                </label>
+                <textarea
+                  value={projectDescription}
+                  onChange={(e) => setProjectDescription(e.target.value)}
+                  placeholder="Describe the project, its goals, and context..."
+                  rows={4}
+                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors resize-none"
+                />
+                <p className="text-xs text-slate-500 mt-1">Provide context about your project to help generate a more tailored RFP</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
                   Quality Standards & Certifications
                 </label>
                 <input
@@ -334,7 +350,7 @@ export default function GenerateRFPPage() {
                     <div className="inline-block h-5 w-5 animate-spin rounded-full border-3 border-solid border-blue-600 border-r-transparent"></div>
                     <div className="text-sm text-blue-800">
                       <p className="font-semibold">Generating your RFP...</p>
-                      <p className="text-xs mt-1">GPT-4 is creating each section. This may take 30-60 seconds.</p>
+                      <p className="text-xs mt-1">Nexa is creating each section. This may take 30-60 seconds.</p>
                     </div>
                   </div>
                 </div>

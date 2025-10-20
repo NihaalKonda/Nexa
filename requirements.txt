@@ -18,6 +18,7 @@ geopy>=2.4.0
 Jinja2>=3.1.0
 pypandoc>=1.11
 markdown>=3.5.0
+xhtml2pdf>=0.2.15
 
 # Original src/ dependencies (kept for compatibility)
 beautifulsoup4>=4.12.0

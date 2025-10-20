@@ -13,7 +13,6 @@ rfp_prompt_templates = {
         "- A short overview of the client company (industry, size, operations).\n"
         "- The business problem or need they are addressing.\n"
         "- Their strategic goals and desired outcomes.\n"
-        "- Relevant historical context (e.g., previous systems or vendors).\n\n"
         "Use the following data to ground the response:\n\n{introduction_context}\n\n"
         "Keep the tone professional and clear."
     ),
