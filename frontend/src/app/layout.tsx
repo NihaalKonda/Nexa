@@ -18,6 +18,9 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "Nexa | Automating Procurement",
   description: "Smart product search and AI-powered RFP generation for industrial procurement",
+  icons: {
+    icon: '/nexa_logo.png',
+  },
 };
 
 export default function RootLayout({
