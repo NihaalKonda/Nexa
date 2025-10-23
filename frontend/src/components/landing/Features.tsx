@@ -62,14 +62,10 @@ const Features = () => {
               key={index}
               className="p-8 relative hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-slate-200"
             >
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 flex items-center justify-center text-white font-bold text-sm">
-                {feature.number}
-              </div>
-
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 flex items-center justify-center mb-6 mt-4">
+              <div className="w-14 h-14 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 flex items-center justify-center mb-6">
                 <feature.icon className="w-7 h-7 text-white" />
               </div>
-              <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
+              <h3 className="text-2xl font-semibold mb-3">{feature.title}</h3>
               <p className="text-slate-600 leading-relaxed">{feature.description}</p>
             </Card>
           ))}
