@@ -96,7 +96,7 @@ const Benefits = () => {
             </ul>
 
             <Link href="/auth/signup">
-              <Button variant="outline" className="w-full border-2" size="lg">
+              <Button variant="outline" className="w-full" size="lg">
                 Join as Supplier
               </Button>
             </Link>
