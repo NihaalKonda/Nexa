@@ -5,7 +5,7 @@ import { prisma } from "@/lib/db"
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -13,9 +13,11 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const { id } = await params
+
     const rfp = await prisma.rFP.findFirst({
       where: {
-        id: params.id,
+        id,
         companyId: (session.user as any).companyId,
       },
       include: {
@@ -46,7 +48,7 @@ export async function GET(
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -54,11 +56,12 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    const { id } = await params
     const { title, bodyMd, draftJson, status } = await req.json()
 
     const rfp = await prisma.rFP.updateMany({
       where: {
-        id: params.id,
+        id,
         companyId: (session.user as any).companyId,
       },
       data: {
@@ -74,7 +77,7 @@ export async function PATCH(
     }
 
     const updated = await prisma.rFP.findUnique({
-      where: { id: params.id },
+      where: { id },
     })
 
     return NextResponse.json(updated)
