@@ -21,6 +21,7 @@ export default function SearchGPTPage() {
   const [useDetailed, setUseDetailed] = useState(false)
   const [loadingSession, setLoadingSession] = useState(false)
   const [successMessage, setSuccessMessage] = useState("")
+  const [sortBy, setSortBy] = useState<"score" | "price" | "contracts">("score")
 
   // Redirect to signin if not authenticated
   useEffect(() => {
@@ -109,6 +110,40 @@ export default function SearchGPTPage() {
   // Don't render page if not authenticated
   if (!session) {
     return null
+  }
+
+  // Helper function to extract price as number for sorting
+  const extractPriceValue = (priceRange: string): number => {
+    const numbers = priceRange.match(/\d+\.?\d*/g)
+    if (!numbers || numbers.length === 0) return 0
+    // If there's a range, use the average
+    const prices = numbers.map(n => parseFloat(n))
+    return prices.reduce((a, b) => a + b, 0) / prices.length
+  }
+
+  // Helper function to count contracts
+  const countContracts = (contracts?: string): number => {
+    if (!contracts || contracts === "None found" || contracts === "None") return 0
+    return contracts.split(';').filter(c => c.trim().length > 0).length
+  }
+
+  // Sort suppliers based on selected criteria
+  const getSortedSuppliers = () => {
+    const sorted = [...suppliers]
+
+    switch (sortBy) {
+      case "price":
+        sorted.sort((a, b) => extractPriceValue(a.price_range) - extractPriceValue(b.price_range))
+        break
+      case "score":
+        sorted.sort((a, b) => (b.score || 0) - (a.score || 0))
+        break
+      case "contracts":
+        sorted.sort((a, b) => countContracts(b.past_contracts) - countContracts(a.past_contracts))
+        break
+    }
+
+    return sorted
   }
 
   const handleSearch = async (e: React.FormEvent) => {
@@ -299,39 +334,56 @@ export default function SearchGPTPage() {
         {/* Results */}
         {suppliers.length > 0 && (
           <div className="max-w-6xl mx-auto">
-            <div className="mb-8">
+            <div className="mb-8 flex justify-between items-center">
               <h2 className="text-3xl font-bold text-slate-900">
                 Found {suppliers.length} {suppliers.length === 1 ? "supplier" : "suppliers"}
               </h2>
+
+              {/* Sort Dropdown */}
+              <div className="flex items-center gap-3">
+                <label htmlFor="sort" className="text-sm font-medium text-slate-700">
+                  Sort by:
+                </label>
+                <select
+                  id="sort"
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as "score" | "price" | "contracts")}
+                  className="px-4 py-2 border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors text-sm bg-white"
+                >
+                  <option value="score">Quality Score</option>
+                  <option value="price">Price (Low to High)</option>
+                  <option value="contracts"># of Contracts</option>
+                </select>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-8">
-              {suppliers.map((supplier, index) => (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {getSortedSuppliers().map((supplier, index) => (
                 <div
                   key={index}
-                  className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-slate-200 overflow-hidden"
+                  className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border border-slate-200 overflow-hidden"
                 >
-                  <div className="p-8">
+                  <div className="p-5">
                     {/* Header */}
-                    <div className="flex justify-between items-start mb-6">
+                    <div className="flex justify-between items-start mb-4">
                       <div className="flex-1">
-                        <h3 className="text-3xl font-bold text-slate-900 mb-2">
+                        <h3 className="text-xl font-bold text-slate-900 mb-1">
                           {supplier.name}
                         </h3>
-                        <p className="text-slate-600 text-lg">{supplier.location}</p>
+                        <p className="text-slate-600 text-sm">{supplier.location}</p>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right ml-4">
                         {supplier.score !== undefined && (
-                          <div className="mb-3">
-                            <span className="text-sm text-slate-600">Score: </span>
-                            <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+                          <div className="mb-2">
+                            <span className="text-xs text-slate-600">Score: </span>
+                            <span className="text-lg font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
                               {supplier.score}/100
                             </span>
                           </div>
                         )}
                         <div>
-                          <span className="text-sm text-slate-600">Price: </span>
-                          <span className="text-xl font-bold text-blue-600">
+                          <span className="text-xs text-slate-600">Price: </span>
+                          <span className="text-base font-bold text-blue-600">
                             {supplier.price_range}
                           </span>
                         </div>
@@ -339,28 +391,28 @@ export default function SearchGPTPage() {
                     </div>
 
                     {/* Product Info */}
-                    <div className="mb-6 pb-6 border-b border-slate-200">
-                      <div className="text-xl font-semibold text-slate-800 mb-2">
+                    <div className="mb-4 pb-4 border-b border-slate-200">
+                      <div className="text-base font-semibold text-slate-800 mb-1">
                         {supplier.product_title}
                       </div>
-                      <div className="text-sm text-slate-600">
+                      <div className="text-xs text-slate-600">
                         Units: {supplier.units_sold}
                       </div>
                     </div>
 
                     {/* Description */}
-                    <p className="text-slate-700 text-base mb-6 leading-relaxed">{supplier.description}</p>
+                    <p className="text-slate-700 text-sm mb-4 leading-relaxed line-clamp-3">{supplier.description}</p>
 
                     {/* Contact */}
-                    <div className="mb-6 space-y-3">
+                    <div className="mb-4 space-y-2">
                       {supplier.website && supplier.website !== "N/A" && (
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold text-slate-700">Website:</span>
+                          <span className="font-semibold text-slate-700 text-xs">Website:</span>
                           <a
                             href={supplier.website}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-700 hover:underline font-medium"
+                            className="text-blue-600 hover:text-blue-700 hover:underline text-xs truncate"
                           >
                             {supplier.website}
                           </a>
@@ -368,30 +420,49 @@ export default function SearchGPTPage() {
                       )}
                       {supplier.contact && supplier.contact !== "N/A" && (
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold text-slate-700">Contact:</span>
-                          <span className="text-slate-600">{supplier.contact}</span>
+                          <span className="font-semibold text-slate-700 text-xs">Contact:</span>
+                          <span className="text-slate-600 text-xs">{supplier.contact}</span>
                         </div>
                       )}
                     </div>
 
                     {/* Contracts & Reviews (if detailed search) */}
                     {supplier.past_contracts && (
-                      <div className="mb-6 p-6 bg-blue-50 border border-blue-100 rounded-xl">
-                        <div className="font-bold text-slate-900 mb-3 text-lg">
+                      <div className="mb-4 p-4 bg-blue-50 border border-blue-100 rounded-lg">
+                        <div className="font-bold text-slate-900 mb-2 text-sm">
                           Past Contracts
                         </div>
-                        <div className="text-sm text-slate-700 leading-relaxed">
-                          {supplier.past_contracts}
-                        </div>
+                        {supplier.past_contracts === "None found" || supplier.past_contracts === "None" ? (
+                          <div className="text-xs text-slate-600 italic">No contracts found</div>
+                        ) : (
+                          <div className="space-y-2">
+                            {supplier.past_contracts.split(';').map((contract, idx) => {
+                              const match = contract.trim().match(/^(.+?):\s*\$?([\d,]+)\s*\((.+?)\s*-\s*(.+?)\)/)
+                              if (match) {
+                                const [, agency, amount, startDate, endDate] = match
+                                return (
+                                  <div key={idx} className="flex justify-between items-center text-xs bg-white p-2 rounded border border-blue-200">
+                                    <div>
+                                      <div className="font-semibold text-slate-800">{agency}</div>
+                                      <div className="text-slate-600">{startDate} - {endDate}</div>
+                                    </div>
+                                    <div className="font-bold text-blue-600">${amount}</div>
+                                  </div>
+                                )
+                              }
+                              return null
+                            })}
+                          </div>
+                        )}
                       </div>
                     )}
 
                     {supplier.reviews_mentions && (
-                      <div className="p-6 bg-green-50 border border-green-100 rounded-xl">
-                        <div className="font-bold text-slate-900 mb-3 text-lg">
+                      <div className="p-4 bg-green-50 border border-green-100 rounded-lg">
+                        <div className="font-bold text-slate-900 mb-2 text-sm">
                           Reviews
                         </div>
-                        <div className="text-sm text-slate-700 leading-relaxed">
+                        <div className="text-xs text-slate-700 leading-relaxed max-h-24 overflow-y-auto">
                           {supplier.reviews_mentions}
                         </div>
                       </div>
