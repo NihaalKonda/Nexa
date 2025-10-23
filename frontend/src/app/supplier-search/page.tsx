@@ -378,7 +378,7 @@ export default function SearchGPTPage() {
                     {supplier.past_contracts && (
                       <div className="mb-6 p-6 bg-blue-50 border border-blue-100 rounded-xl">
                         <div className="font-bold text-slate-900 mb-3 text-lg">
-                          Government Contracts
+                          Past Contracts
                         </div>
                         <div className="text-sm text-slate-700 leading-relaxed">
                           {supplier.past_contracts}
@@ -389,7 +389,7 @@ export default function SearchGPTPage() {
                     {supplier.reviews_mentions && (
                       <div className="p-6 bg-green-50 border border-green-100 rounded-xl">
                         <div className="font-bold text-slate-900 mb-3 text-lg">
-                          Reviews & Mentions
+                          Reviews
                         </div>
                         <div className="text-sm text-slate-700 leading-relaxed">
                           {supplier.reviews_mentions}
