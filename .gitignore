@@ -42,6 +42,9 @@ osh-testing-env/
 .DS_Store
 Thumbs.db
 
+# Vercel
+.vercel
+
 # Jupyter Notebook
 .ipynb_checkpoints
 
