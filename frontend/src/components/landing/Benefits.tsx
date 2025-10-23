@@ -38,7 +38,7 @@ const Benefits = () => {
                 <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 mt-0.5">
                   <div className="w-2 h-2 rounded-full bg-blue-600" />
                 </div>
-                <span className="text-slate-600">Access vetted industrial suppliers</span>
+                <span className="text-slate-600">Access vetted suppliers</span>
               </li>
               <li className="flex items-start gap-3">
                 <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -73,7 +73,7 @@ const Benefits = () => {
                 <div className="w-6 h-6 rounded-full bg-cyan-100 flex items-center justify-center flex-shrink-0 mt-0.5">
                   <div className="w-2 h-2 rounded-full bg-cyan-500" />
                 </div>
-                <span className="text-slate-600">Direct access to qualified industrial buyers</span>
+                <span className="text-slate-600">Direct access to qualified buyers</span>
               </li>
               <li className="flex items-start gap-3">
                 <div className="w-6 h-6 rounded-full bg-cyan-100 flex items-center justify-center flex-shrink-0 mt-0.5">
