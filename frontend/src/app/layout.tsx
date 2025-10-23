@@ -16,7 +16,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Nexa - Industrial Procurement Platform",
+  title: "Nexa | Automating Procurement",
   description: "Smart product search and AI-powered RFP generation for industrial procurement",
 };
 
