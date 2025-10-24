@@ -350,7 +350,7 @@ export default function SearchGPTPage() {
                   onChange={(e) => setSortBy(e.target.value as "score" | "price" | "contracts")}
                   className="px-4 py-2 border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors text-sm bg-white"
                 >
-                  <option value="score">Quality Score</option>
+                  <option value="score">Nexa Score</option>
                   <option value="price">Price (Low to High)</option>
                   <option value="contracts"># of Contracts</option>
                 </select>
@@ -375,14 +375,14 @@ export default function SearchGPTPage() {
                       <div className="text-right ml-4">
                         {supplier.score !== undefined && (
                           <div className="mb-2">
-                            <span className="text-xs text-slate-600">Score: </span>
+                            <span className="text-sm text-slate-600">Score: </span>
                             <span className="text-lg font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
                               {supplier.score}/100
                             </span>
                           </div>
                         )}
                         <div>
-                          <span className="text-xs text-slate-600">Price: </span>
+                          <span className="text-sm text-slate-600">Price: </span>
                           <span className="text-base font-bold text-blue-600">
                             {supplier.price_range}
                           </span>
@@ -395,7 +395,7 @@ export default function SearchGPTPage() {
                       <div className="text-base font-semibold text-slate-800 mb-1">
                         {supplier.product_title}
                       </div>
-                      <div className="text-xs text-slate-600">
+                      <div className="text-sm text-slate-600">
                         Units: {supplier.units_sold}
                       </div>
                     </div>
@@ -407,12 +407,12 @@ export default function SearchGPTPage() {
                     <div className="mb-4 space-y-2">
                       {supplier.website && supplier.website !== "N/A" && (
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold text-slate-700 text-xs">Website:</span>
+                          <span className="font-semibold text-slate-700 text-sm">Website:</span>
                           <a
                             href={supplier.website}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-700 hover:underline text-xs truncate"
+                            className="text-blue-600 hover:text-blue-700 hover:underline text-sm truncate"
                           >
                             {supplier.website}
                           </a>
@@ -420,8 +420,8 @@ export default function SearchGPTPage() {
                       )}
                       {supplier.contact && supplier.contact !== "N/A" && (
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold text-slate-700 text-xs">Contact:</span>
-                          <span className="text-slate-600 text-xs">{supplier.contact}</span>
+                          <span className="font-semibold text-slate-700 text-sm">Contact:</span>
+                          <span className="text-slate-600 text-sm">{supplier.contact}</span>
                         </div>
                       )}
                     </div>
@@ -429,7 +429,7 @@ export default function SearchGPTPage() {
                     {/* Contracts & Reviews (if detailed search) */}
                     {supplier.past_contracts && (
                       <div className="mb-4 p-4 bg-blue-50 border border-blue-100 rounded-lg">
-                        <div className="font-bold text-slate-900 mb-2 text-sm">
+                        <div className="font-bold text-slate-900 mb-2 text-base">
                           Past Contracts
                         </div>
                         {supplier.past_contracts === "None found" || supplier.past_contracts === "None" ? (
@@ -458,11 +458,11 @@ export default function SearchGPTPage() {
                     )}
 
                     {supplier.reviews_mentions && (
-                      <div className="p-4 bg-green-50 border border-green-100 rounded-lg">
-                        <div className="font-bold text-slate-900 mb-2 text-sm">
+                      <div className="p-4 bg-white border border-slate-200 rounded-lg">
+                        <div className="font-bold text-slate-900 mb-2 text-base">
                           Reviews
                         </div>
-                        <div className="text-xs text-slate-700 leading-relaxed max-h-24 overflow-y-auto">
+                        <div className="text-sm text-slate-900 leading-relaxed max-h-24 overflow-y-auto">
                           {supplier.reviews_mentions}
                         </div>
                       </div>
