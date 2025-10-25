@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 from openai import OpenAI
 import requests, json, pandas as pd, time, re
@@ -9,6 +9,7 @@ from geopy.distance import geodesic
 import numpy as np
 import nltk
 from nltk.sentiment import SentimentIntensityAnalyzer
+from rfp_generation.rfp_generator import generate_rfp_from_supplier
 
 # Load environment variables
 load_dotenv()
@@ -23,7 +24,24 @@ except LookupError:
 # 1. FLASK APP SETUP
 # ============================================================
 app = Flask(__name__)
-CORS(app)  # Enable CORS for frontend communication
+# Enable CORS for frontend communication with proper configuration
+CORS(app, resources={
+    r"/api/*": {
+        "origins": [
+            "http://localhost:3000",
+            "http://localhost:3001",
+            "http://localhost:5001",
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:3001",
+            "http://127.0.0.1:5001",
+            "http://10.173.105.175:3000",
+            "http://10.173.105.175:3001"
+        ],
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"],
+        "supports_credentials": True
+    }
+})
 
 # ============================================================
 # 2. CLIENT SETUP
@@ -631,6 +649,117 @@ def api_get_reviews():
             "location": location,
             "reviews": reviews
         })
+
+    except Exception as e:
+        return jsonify({
+            "error": str(e),
+            "success": False
+        }), 500
+
+
+@app.route('/api/rfp/generate', methods=['POST'])
+def api_generate_rfp():
+    """
+    Generate RFP using GPT-4 with Jinja2 templates and export as PDF.
+
+    Request body:
+    {
+        "supplier": {...},  # Supplier object from search results
+        "search_data": {
+            "product": "aluminum sheets",
+            "location": "Buffalo, NY",
+            "priceMin": "50",
+            "priceMax": "300"
+        },
+        "rfp_requirements": {
+            "title": "RFP for Aluminum Supply",
+            "category": "Industrial Materials",
+            "location": "Buffalo, NY",
+            "deliveryDate": "2026-06-01",
+            "budget": "$50,000 - $100,000",
+            "standards": "ISO 9001, ASTM B209",
+            "additionalRequirements": "...",
+            "client_name": "Nexa",
+            "submission_deadline": "December 15, 2025",
+            "submission_email": "procurement@nexa.org",
+            "contract_length": "1 year"
+        }
+    }
+    """
+    try:
+        data = request.get_json()
+
+        # Extract data
+        supplier_data = data.get('supplier', {})
+        search_data = data.get('search_data', {})
+        rfp_requirements = data.get('rfp_requirements', {})
+
+        # Create default supplier if none provided
+        if not supplier_data or supplier_data is None:
+            supplier_data = {
+                "name": "To Be Determined",
+                "location": rfp_requirements.get('location', 'N/A'),
+                "product_title": search_data.get('product', rfp_requirements.get('title', 'Product')),
+                "price_range": rfp_requirements.get('budget', 'N/A'),
+                "website": "N/A",
+                "contact": "N/A",
+                "description": "Supplier to be determined through RFP process"
+            }
+
+        if not rfp_requirements.get('title'):
+            return jsonify({
+                "error": "RFP title is required"
+            }), 400
+
+        # Generate RFP using the existing Python module
+        result = generate_rfp_from_supplier(
+            supplier_data=supplier_data,
+            search_data=search_data,
+            rfp_requirements=rfp_requirements
+        )
+
+        return jsonify({
+            "success": True,
+            "markdown": result['markdown'],
+            "pdf_filename": result['pdf_filename'],
+            "pdf_path": result['pdf_path']
+        })
+
+    except Exception as e:
+        print(f"RFP generation error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            "error": str(e),
+            "success": False
+        }), 500
+
+
+@app.route('/api/rfp/download/<filename>', methods=['GET'])
+def api_download_rfp(filename):
+    """Download/view generated RFP document (HTML or PDF)"""
+    try:
+        pdf_dir = os.path.join(os.path.dirname(__file__), "data", "rfp_outputs")
+        file_path = os.path.join(pdf_dir, filename)
+
+        if not os.path.exists(file_path):
+            return jsonify({"error": "File not found"}), 404
+
+        # Determine MIME type based on file extension
+        if filename.endswith('.html'):
+            mimetype = 'text/html'
+        elif filename.endswith('.pdf'):
+            mimetype = 'application/pdf'
+        else:
+            mimetype = 'application/octet-stream'
+
+        # For HTML, display inline; for PDF, can download
+        return send_file(
+            file_path,
+            mimetype=mimetype,
+            as_attachment=False,  # Display in browser instead of forcing download
+            download_name=filename
+        )
 
     except Exception as e:
         return jsonify({

@@ -1,0 +1,69 @@
+# Request for Proposal (RFP)
+
+## Project Overview
+**Project Title:** {{ project_title }}  
+**Client:** {{ client_name }}  
+**Industry:** {{ client_industry }}  
+**Date:** {{ rfp_date }}
+
+---
+
+## 1. Introduction
+{{ introduction }}
+
+---
+
+## 2. Scope of Work
+{{ scope_of_work }}
+
+---
+
+## 3. Vendor Qualifications
+{{ qualifications }}
+
+---
+
+## 4. Project Timeline
+{{ timeline }}
+
+| Milestone         | Description              | Target Date |
+|-------------------|---------------------------|-------------|
+| Project Kickoff   | Initial alignment         | {{ timeline_data.kickoff }} |
+| MVP Delivery      | First prototype           | {{ timeline_data.mvp }} |
+| Testing Phase     | QA and user testing       | {{ timeline_data.testing }} |
+| Final Deployment  | Production release        | {{ timeline_data.final }} |
+
+---
+
+## 5. Evaluation Criteria
+{{ evaluation }}
+
+| Criteria | Weight (%) |
+|----------|------------|
+{%- for k,v in evaluation_weights.items() %}
+| {{ k.replace('_', ' ') | title }} | {{ (v*100)|int }}% |
+{%- endfor %}
+
+**Non-negotiables:**  
+{% for item in non_negotiables %}
+- {{ item }}
+{% endfor %}
+
+---
+
+## 6. Pricing Details
+{{ pricing }}
+
+---
+
+## 7. Submission Instructions
+
+A proposal must include the following in their response:
+1. A brief history of the proposing entity, including general background and past deals.
+2. A statement substantiating the resources of the proposing entity and the ability to carry out the scope of work requested within the proposed timeline.
+3. Proposed fee structure, including billing rates, reimbursable expenses, etc.
+4. At least one (1) example of work.
+5. A statement of conflicts (if any) the proposing entity or key employees may have regarding these services. If no potential conflicts of interests are identified, please state so.
+6. Preferred: References including contact information.
+
+Contact: {{ submission_email_or_portal }}
