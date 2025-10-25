@@ -357,7 +357,7 @@ export default function SearchGPTPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
               {getSortedSuppliers().map((supplier, index) => (
                 <div
                   key={index}
@@ -469,7 +469,8 @@ export default function SearchGPTPage() {
                     )}
 
                     {/* Generate RFP Button */}
-                    <button
+                    <div className="mt-6">
+                      <button
                       onClick={() => {
                         // Encode supplier data in URL params
                         const params = new URLSearchParams({
@@ -485,6 +486,7 @@ export default function SearchGPTPage() {
                     >
                       Generate RFP for {supplier.name}
                     </button>
+                    </div>
                   </div>
                 </div>
               ))}
