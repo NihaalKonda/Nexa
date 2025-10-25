@@ -83,7 +83,6 @@ def build_customer_context(supplier_data: dict, search_data: dict, rfp_requireme
     product_title = supplier_data.get("product_title", search_data.get("product", "N/A"))
     price_range = supplier_data.get("price_range", "N/A")
     supplier_description = supplier_data.get("description", "")
-    supplier_website = supplier_data.get("website", "")
     supplier_contact = supplier_data.get("contact", "")
 
     # Extract RFP form data
@@ -113,7 +112,6 @@ def build_customer_context(supplier_data: dict, search_data: dict, rfp_requireme
     scope_context = {
         "tasks": f"Vendor shall supply {product_title} from {supplier_name} ({supplier_location}). Price range: {price_range}. Delivery to {delivery_location} by {delivery_date}.",
         "tech_specs": f"Product must meet the following standards: {standards if standards else 'Industry-standard specifications and quality requirements'}. {additional_reqs}",
-        "integrations": [supplier_website] if supplier_website and supplier_website != "N/A" else [],
         "metrics": f"Key performance indicators: On-time delivery to {delivery_location}, quality compliance rate >98%, competitive pricing within {budget}, responsive customer service. Contact: {supplier_contact if supplier_contact != 'N/A' else 'To be provided'}.",
         "additional": additional_reqs if additional_reqs else f"Vendor must maintain consistent supply of {product_title} and provide regular quality reports."
     }
@@ -146,14 +144,20 @@ def build_customer_context(supplier_data: dict, search_data: dict, rfp_requireme
     }
 
     # Build evaluation context
+    # Use custom evaluation criteria if provided, otherwise use defaults
+    custom_eval_criteria = rfp_requirements.get("evaluationCriteria", {})
+    additional_criteria = rfp_requirements.get("additionalCriteria", "")
+    default_weights = {
+        "technical_capability": 0.30,
+        "pricing_competitiveness": 0.30,
+        "delivery_reliability": 0.20,
+        "quality_assurance": 0.15,
+        "customer_service": 0.05
+    }
+
     evaluation_context = {
-        "weights": {
-            "technical_capability": 0.30,
-            "pricing_competitiveness": 0.30,
-            "delivery_reliability": 0.20,
-            "quality_assurance": 0.15,
-            "customer_service": 0.05
-        },
+        "weights": custom_eval_criteria if custom_eval_criteria else default_weights,
+        "additional_notes": additional_criteria,
         "non_negotiables": [
             f"Must be able to deliver to {delivery_location}",
             f"Product must meet specification: {product_title}",
@@ -177,13 +181,13 @@ def build_customer_context(supplier_data: dict, search_data: dict, rfp_requireme
         "format": "Detailed line-item breakdown with unit costs and quantities",
         "categories": [
             f"Unit price for {product_title}",
-            "Shipping and logistics to" + delivery_location,
+            f"Shipping and logistics to {delivery_location}",
             "Taxes and duties",
             "Quality inspection fees (if applicable)",
             "Rush delivery fees (if applicable)",
             "Volume discounts (if applicable)"
         ],
-        "contract_length": rfp_requirements.get("contract_length", "1 year with option to renew"),
+        "contract_length": rfp_requirements.get("contract_length") or "1 year",
         "budget_range": budget,
         "payment_terms": "Net 30 days from delivery and acceptance"
     }

@@ -38,11 +38,11 @@
 ## 5. Evaluation Criteria
 {{ evaluation }}
 
-| Criteria              | Weight (%) |
-|-----------------------|------------|
-{% for k,v in evaluation_weights.items() %}
-| {{ k | title }}       | {{ (v*100)|int }}% |
-{% endfor %}
+| Criteria | Weight (%) |
+|----------|------------|
+{%- for k,v in evaluation_weights.items() %}
+| {{ k.replace('_', ' ') | title }} | {{ (v*100)|int }}% |
+{%- endfor %}
 
 **Non-negotiables:**  
 {% for item in non_negotiables %}
@@ -54,16 +54,16 @@
 ## 6. Pricing Details
 {{ pricing }}
 
-**Pricing Guidelines:**
-- Currency: {{ pricing_data.currency }}
-- Contract Length: {{ pricing_data.contract_length }}
-- Required cost categories:
-{% for cat in pricing_data.categories %}
-- {{ cat }}
-{% endfor %}
-
 ---
 
-### Submission Instructions
-- **Deadline:** {{ submission_deadline }}
-- **Delivery:** {{ submission_email_or_portal }}
+## 7. Submission Instructions
+
+A proposal must include the following in their response:
+1. A brief history of the proposing entity, including general background and past deals.
+2. A statement substantiating the resources of the proposing entity and the ability to carry out the scope of work requested within the proposed timeline.
+3. Proposed fee structure, including billing rates, reimbursable expenses, etc.
+4. At least one (1) example of work.
+5. A statement of conflicts (if any) the proposing entity or key employees may have regarding these services. If no potential conflicts of interests are identified, please state so.
+6. Preferred: References including contact information.
+
+Contact: {{ submission_email_or_portal }}

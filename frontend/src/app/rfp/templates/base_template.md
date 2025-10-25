@@ -107,7 +107,7 @@ Attach any relevant diagrams, data sheets, or legal terms here.
 ### 🟦 Submission Instructions
 - **Deadline:** {submission_deadline}  
 - **Format:** PDF or DOCX  
-- **Delivery:** {submission_email_or_portal}
+- **Contact:** {submission_email_or_portal}
 
 For questions or clarifications, contact **{contact_name}** at **{contact_email}**.
 

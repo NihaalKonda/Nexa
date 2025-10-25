@@ -18,8 +18,17 @@ export default function GenerateRFPPage() {
   const [deliveryDate, setDeliveryDate] = useState("")
   const [budget, setBudget] = useState("")
   const [projectDescription, setProjectDescription] = useState("")
+  const [contractLength, setContractLength] = useState("")
   const [standards, setStandards] = useState("")
   const [additionalRequirements, setAdditionalRequirements] = useState("")
+  const [evaluationCriteria, setEvaluationCriteria] = useState([
+    { name: "Technical Capability", key: "technical_capability", weight: 30 },
+    { name: "Pricing Competitiveness", key: "pricing_competitiveness", weight: 30 },
+    { name: "Delivery Reliability", key: "delivery_reliability", weight: 20 },
+    { name: "Quality Assurance", key: "quality_assurance", weight: 15 },
+    { name: "Customer Service", key: "customer_service", weight: 5 }
+  ])
+  const [additionalCriteria, setAdditionalCriteria] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [generatedRFP, setGeneratedRFP] = useState<any>(null)
@@ -105,10 +114,15 @@ export default function GenerateRFPPage() {
             projectDescription,
             standards: standards,
             additionalRequirements,
+            evaluationCriteria: evaluationCriteria.reduce((acc, criterion) => {
+              acc[criterion.key] = criterion.weight / 100;
+              return acc;
+            }, {} as Record<string, number>),
+            additionalCriteria,
             client_name: "Nexa",
             submission_deadline: "TBD",
             submission_email: "procurement@nexa.org",
-            contract_length: "1 year",
+            contract_length: contractLength,
           },
         }),
       })
@@ -135,22 +149,6 @@ export default function GenerateRFPPage() {
 
     // Open in new tab to view
     window.open(viewUrl, '_blank')
-  }
-
-  const handleDownloadRFP = () => {
-    if (!generatedRFP?.pdf_filename) return
-
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
-    const downloadUrl = `${API_BASE_URL}/api/rfp/download/${generatedRFP.pdf_filename}`
-
-    // Create a temporary link to trigger download
-    const link = document.createElement('a')
-    link.href = downloadUrl
-    link.download = generatedRFP.pdf_filename
-    link.target = '_blank'
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
   }
 
   return (
@@ -214,8 +212,11 @@ export default function GenerateRFPPage() {
             <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
               Generate RFP
             </h1>
-            <p className="text-slate-600 mb-6">
+            <p className="text-slate-600 mb-2">
               Fill in the details below to generate a comprehensive Request for Proposal
+            </p>
+            <p className="text-sm text-slate-500 mb-6">
+              Fields marked with * are mandatory
             </p>
 
             {error && (
@@ -308,6 +309,19 @@ export default function GenerateRFPPage() {
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Contract Length
+                </label>
+                <input
+                  type="text"
+                  value={contractLength}
+                  onChange={(e) => setContractLength(e.target.value)}
+                  placeholder="e.g., 1 year, 2 years with renewal"
+                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
                   Quality Standards & Certifications
                 </label>
                 <input
@@ -333,6 +347,69 @@ export default function GenerateRFPPage() {
                 />
               </div>
 
+              {/* Evaluation Criteria */}
+              <div className="border-2 border-slate-200 rounded-lg p-6 bg-white">
+                <label className="block text-sm font-medium text-slate-700 mb-4">
+                  Evaluation Criteria (Must total 100%)
+                </label>
+                <div className="space-y-3">
+                  {evaluationCriteria.map((criterion, index) => (
+                    <div key={index} className="flex items-center gap-3">
+                      <input
+                        type="text"
+                        value={criterion.name}
+                        onChange={(e) => {
+                          const updated = [...evaluationCriteria];
+                          updated[index].name = e.target.value;
+                          setEvaluationCriteria(updated);
+                        }}
+                        placeholder="Criterion name"
+                        className="flex-1 px-3 py-2 border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:outline-none text-sm"
+                      />
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={criterion.weight}
+                        onChange={(e) => {
+                          const updated = [...evaluationCriteria];
+                          updated[index].weight = Number(e.target.value);
+                          setEvaluationCriteria(updated);
+                        }}
+                        className="w-20 px-3 py-2 border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:outline-none text-sm"
+                      />
+                      <span className="text-sm text-slate-600">%</span>
+                    </div>
+                  ))}
+                  <div className="pt-2 border-t border-slate-300">
+                    <div className="flex items-center gap-3">
+                      <span className="flex-1 text-sm font-medium text-slate-700">Total</span>
+                      <span className={`w-20 text-sm font-bold ${
+                        evaluationCriteria.reduce((sum, c) => sum + c.weight, 0) === 100
+                          ? 'text-green-600'
+                          : 'text-red-600'
+                      }`}>
+                        {evaluationCriteria.reduce((sum, c) => sum + c.weight, 0)}%
+                      </span>
+                      <span className="text-sm text-transparent">%</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Additional Evaluation Notes
+                  </label>
+                  <textarea
+                    value={additionalCriteria}
+                    onChange={(e) => setAdditionalCriteria(e.target.value)}
+                    placeholder="Add any additional evaluation criteria, scoring details, or notes that should be considered..."
+                    rows={4}
+                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors resize-none"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">This will be included in the Evaluation Criteria section</p>
+                </div>
+              </div>
+
               <button
                 type="submit"
                 disabled={loading}
@@ -341,7 +418,7 @@ export default function GenerateRFPPage() {
                 {loading && (
                   <div className="inline-block h-5 w-5 animate-spin rounded-full border-3 border-solid border-white border-r-transparent"></div>
                 )}
-                {loading ? "Generating RFP with AI..." : "Generate RFP"}
+                {loading ? "Generating RFP..." : "Generate RFP"}
               </button>
 
               {loading && (
@@ -375,15 +452,9 @@ export default function GenerateRFPPage() {
                   </button>
                   <button
                     onClick={handleViewRFP}
-                    className="px-4 py-2 text-sm font-medium text-blue-600 border-2 border-blue-600 rounded-lg hover:bg-blue-50 transition-colors"
-                  >
-                    View Document
-                  </button>
-                  <button
-                    onClick={handleDownloadRFP}
                     className="px-4 py-2 text-sm font-medium bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all shadow-md hover:shadow-lg"
                   >
-                    Download HTML
+                    View Document
                   </button>
                 </div>
               </div>
