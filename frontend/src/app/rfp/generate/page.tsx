@@ -121,9 +121,9 @@ export default function GenerateRFPPage() {
               return acc;
             }, {} as Record<string, number>),
             additionalCriteria,
-            client_name: "Nexa",
+            client_name: session.user?.name || "Nexa",
             submission_deadline: "TBD",
-            submission_email: "procurement@nexa.org",
+            submission_email: session.user?.email || "procurement@nexa.org",
             contract_length: contractLength,
           },
         }),
