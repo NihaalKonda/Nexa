@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useSession, signOut } from "next-auth/react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
@@ -11,6 +11,7 @@ import { searchSuppliers, searchSuppliersDetailed, type Supplier } from "@/lib/a
 export default function SearchGPTPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [product, setProduct] = useState("")
   const [location, setLocation] = useState("")
   const [priceMin, setPriceMin] = useState("")
@@ -29,6 +30,14 @@ export default function SearchGPTPage() {
       router.push("/auth/signin")
     }
   }, [status, router])
+
+  // Auto-load session if loadSession query parameter is present
+  useEffect(() => {
+    const shouldLoadSession = searchParams.get("loadSession")
+    if (shouldLoadSession === "true" && status === "authenticated") {
+      handleLoadLastSession()
+    }
+  }, [searchParams, status])
 
   // Function to load last session
   const handleLoadLastSession = async () => {

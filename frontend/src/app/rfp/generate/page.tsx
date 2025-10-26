@@ -4,6 +4,8 @@ import { useState, useEffect } from "react"
 import { useSession, signOut } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
+import Image from "next/image"
+import { Button } from "@/components/ui/button"
 import { type Supplier } from "@/lib/api"
 
 export default function GenerateRFPPage() {
@@ -154,33 +156,47 @@ export default function GenerateRFPPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Header */}
-      <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Nexa
-          </Link>
-          <nav className="flex gap-6 items-center">
-            <Link href="/search-gpt" className="text-sm font-medium hover:text-blue-600 transition-colors">
-              AI Search
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100">
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <Link href="/" className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity">
+              <Image
+                src="/nexa_logo.png"
+                alt="Nexa Logo"
+                width={40}
+                height={40}
+                className="h-10 w-10"
+              />
+              <span className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+                Nexa
+              </span>
             </Link>
-            <Link href="/dashboard" className="text-sm font-medium hover:text-blue-600 transition-colors">
-              Dashboard
-            </Link>
-            <div className="h-4 w-px bg-slate-300"></div>
-            <span className="text-sm text-slate-600">{session.user?.name}</span>
-            <button
-              onClick={() => {
-                signOut({ callbackUrl: "/" })
-              }}
-              className="text-sm font-medium text-red-600 hover:text-red-700 transition-colors"
-            >
-              Sign Out
-            </button>
-          </nav>
+
+            <div className="flex items-center gap-6">
+              <span className="text-base font-medium text-slate-700">{session.user?.name}</span>
+              <Button
+                onClick={() => {
+                  router.push("/supplier-search?loadSession=true")
+                }}
+                variant="ghost"
+              >
+                Supplier Search
+              </Button>
+              <Button
+                onClick={() => {
+                  signOut({ callbackUrl: "/" })
+                }}
+                variant="ghost"
+                className="text-red-600 hover:text-red-700"
+              >
+                Sign Out
+              </Button>
+            </div>
+          </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 pt-24">
         <div className="max-w-4xl mx-auto">
           {/* Supplier Info Card */}
           {supplier && (
@@ -410,16 +426,15 @@ export default function GenerateRFPPage() {
                 </div>
               </div>
 
-              <button
+              <Button
                 type="submit"
                 disabled={loading}
-                className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-medium rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                variant="hero"
+                size="lg"
+                className="w-full hover:shadow-md hover:scale-[1.02] transition-transform"
               >
-                {loading && (
-                  <div className="inline-block h-5 w-5 animate-spin rounded-full border-3 border-solid border-white border-r-transparent"></div>
-                )}
                 {loading ? "Generating RFP..." : "Generate RFP"}
-              </button>
+              </Button>
 
               {loading && (
                 <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
@@ -450,12 +465,13 @@ export default function GenerateRFPPage() {
                   >
                     Copy Markdown
                   </button>
-                  <button
+                  <Button
                     onClick={handleViewRFP}
-                    className="px-4 py-2 text-sm font-medium bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all shadow-md hover:shadow-lg"
+                    variant="hero"
+                    className="hover:shadow-md hover:scale-[1.02] transition-transform"
                   >
                     View Document
-                  </button>
+                  </Button>
                 </div>
               </div>
 
