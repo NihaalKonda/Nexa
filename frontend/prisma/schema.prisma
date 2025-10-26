@@ -142,6 +142,9 @@ model RFP {
   bodyMd     String     @db.Text
   draftJson  Json       @db.JsonB
   status     String     @default("draft") // draft, published, archived
+  pdfContent Bytes?     // Store PDF binary content
+  htmlContent String?   @db.Text // Store HTML version for viewing
+  filename   String?    // Original filename for downloads
   shares     RFPShare[]
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt

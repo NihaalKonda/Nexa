@@ -197,13 +197,12 @@ export default function SearchGPTPage() {
             </Link>
 
             <div className="flex items-center gap-6">
-              <span className="text-sm text-slate-600">{session.user?.name}</span>
+              <span className="text-base font-medium text-slate-700">{session.user?.name}</span>
               <Button
                 onClick={() => {
                   signOut({ callbackUrl: "/" })
                 }}
                 variant="ghost"
-                size="sm"
                 className="text-red-600 hover:text-red-700"
               >
                 Sign Out
@@ -323,7 +322,7 @@ export default function SearchGPTPage() {
                 disabled={loading}
                 variant="hero"
                 size="lg"
-                className="w-full"
+                className="w-full hover:shadow-md hover:scale-[1.02] transition-transform"
               >
                 {loading ? "Searching..." : "Search Suppliers"}
               </Button>
@@ -470,22 +469,24 @@ export default function SearchGPTPage() {
 
                     {/* Generate RFP Button */}
                     <div className="mt-6">
-                      <button
-                      onClick={() => {
-                        // Encode supplier data in URL params
-                        const params = new URLSearchParams({
-                          supplier: JSON.stringify(supplier),
-                          product,
-                          location,
-                          priceMin,
-                          priceMax,
-                        })
-                        router.push(`/rfp/generate?${params.toString()}`)
-                      }}
-                      className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-medium rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all shadow-md hover:shadow-lg"
-                    >
-                      Generate RFP for {supplier.name}
-                    </button>
+                      <Button
+                        onClick={() => {
+                          // Encode supplier data in URL params
+                          const params = new URLSearchParams({
+                            supplier: JSON.stringify(supplier),
+                            product,
+                            location,
+                            priceMin,
+                            priceMax,
+                          })
+                          router.push(`/rfp/generate?${params.toString()}`)
+                        }}
+                        variant="hero"
+                        size="lg"
+                        className="w-full hover:shadow-md hover:scale-[1.02] transition-transform"
+                      >
+                        Generate RFP for {supplier.name}
+                      </Button>
                     </div>
                   </div>
                 </div>
