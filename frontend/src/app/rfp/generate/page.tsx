@@ -135,7 +135,41 @@ export default function GenerateRFPPage() {
       }
 
       const data = await response.json()
-      setGeneratedRFP(data)
+      console.log("RFP generated successfully, pdf_content length:", data.pdf_content?.length)
+
+      // Save RFP to database
+      try {
+        console.log("Attempting to save RFP to database...")
+        const saveResponse = await fetch("/api/rfp/save", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            markdown: data.markdown,
+            filename: data.pdf_filename,
+            htmlContent: null,
+            pdfContent: data.pdf_content, // Save PDF content from backend
+            title: title || `RFP for ${supplier?.name || 'Supplier'}`,
+          }),
+        })
+
+        if (saveResponse.ok) {
+          const saveData = await saveResponse.json()
+          console.log("✅ RFP saved to database with ID:", saveData.rfpId)
+          // Store the rfpId to use for viewing
+          setGeneratedRFP({ ...data, rfpId: saveData.rfpId })
+        } else {
+          const errorText = await saveResponse.text()
+          console.error("❌ Failed to save RFP to database:", saveResponse.status, errorText)
+          // Still set the RFP data so we can view it from pdf_content
+          setGeneratedRFP(data)
+        }
+      } catch (saveErr) {
+        console.error("❌ Exception saving RFP to database:", saveErr)
+        // Still set the RFP data so we can view it from pdf_content
+        setGeneratedRFP(data)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred")
     } finally {
@@ -144,13 +178,27 @@ export default function GenerateRFPPage() {
   }
 
   const handleViewRFP = () => {
-    if (!generatedRFP?.pdf_filename) return
+    if (!generatedRFP) return
 
-    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
-    const viewUrl = `${API_BASE_URL}/api/rfp/download/${generatedRFP.pdf_filename}`
+    // If we have an rfpId, use the database
+    if (generatedRFP.rfpId) {
+      const viewUrl = `/api/rfp/${generatedRFP.rfpId}`
+      window.open(viewUrl, '_blank')
+    } else if (generatedRFP.pdf_content) {
+      // Fallback: Convert base64 to blob and open in new tab
+      const byteCharacters = atob(generatedRFP.pdf_content)
+      const byteNumbers = new Array(byteCharacters.length)
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i)
+      }
+      const byteArray = new Uint8Array(byteNumbers)
+      const blob = new Blob([byteArray], { type: 'application/pdf' })
+      const url = URL.createObjectURL(blob)
+      window.open(url, '_blank')
 
-    // Open in new tab to view
-    window.open(viewUrl, '_blank')
+      // Clean up the URL after a delay
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
+    }
   }
 
   return (
@@ -176,11 +224,19 @@ export default function GenerateRFPPage() {
               <span className="text-base font-medium text-slate-700">{session.user?.name}</span>
               <Button
                 onClick={() => {
-                  router.push("/supplier-search?loadSession=true")
+                  router.push("/supplier-search")
                 }}
                 variant="ghost"
               >
                 Supplier Search
+              </Button>
+              <Button
+                onClick={() => {
+                  router.push("/rfp-dashboard")
+                }}
+                variant="ghost"
+              >
+                RFP Dashboard
               </Button>
               <Button
                 onClick={() => {

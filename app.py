@@ -722,7 +722,7 @@ def api_generate_rfp():
             "success": True,
             "markdown": result['markdown'],
             "pdf_filename": result['pdf_filename'],
-            "pdf_path": result['pdf_path']
+            "pdf_content": result['pdf_content']
         })
 
     except Exception as e:
@@ -734,38 +734,8 @@ def api_generate_rfp():
             "success": False
         }), 500
 
-
-@app.route('/api/rfp/download/<filename>', methods=['GET'])
-def api_download_rfp(filename):
-    """Download/view generated RFP document (HTML or PDF)"""
-    try:
-        pdf_dir = os.path.join(os.path.dirname(__file__), "data", "rfp_outputs")
-        file_path = os.path.join(pdf_dir, filename)
-
-        if not os.path.exists(file_path):
-            return jsonify({"error": "File not found"}), 404
-
-        # Determine MIME type based on file extension
-        if filename.endswith('.html'):
-            mimetype = 'text/html'
-        elif filename.endswith('.pdf'):
-            mimetype = 'application/pdf'
-        else:
-            mimetype = 'application/octet-stream'
-
-        # For HTML, display inline; for PDF, can download
-        return send_file(
-            file_path,
-            mimetype=mimetype,
-            as_attachment=False,  # Display in browser instead of forcing download
-            download_name=filename
-        )
-
-    except Exception as e:
-        return jsonify({
-            "error": str(e),
-            "success": False
-        }), 500
+# Old file-based download endpoint removed - RFPs are now stored in database
+# Use Next.js API route /api/rfp/[rfpId] instead
 
 
 # ============================================================

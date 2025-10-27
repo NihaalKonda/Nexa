@@ -209,6 +209,14 @@ export default function SearchGPTPage() {
               <span className="text-base font-medium text-slate-700">{session.user?.name}</span>
               <Button
                 onClick={() => {
+                  router.push("/rfp-dashboard")
+                }}
+                variant="ghost"
+              >
+                RFP Dashboard
+              </Button>
+              <Button
+                onClick={() => {
                   signOut({ callbackUrl: "/" })
                 }}
                 variant="ghost"

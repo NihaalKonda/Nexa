@@ -2,11 +2,10 @@ import markdown
 from xhtml2pdf import pisa
 from io import BytesIO
 
-def markdown_to_pdf(markdown_text: str, output_path: str):
+def markdown_to_pdf_content(markdown_text: str):
     """
-    Convert markdown to PDF using xhtml2pdf (pisa).
-    This generates a clean PDF without browser headers/footers.
-    Pure Python implementation with no system dependencies.
+    Convert markdown to PDF content (in memory, no file saving).
+    Returns PDF as bytes.
     """
     try:
         # Convert markdown to HTML first
@@ -119,20 +118,21 @@ def markdown_to_pdf(markdown_text: str, output_path: str):
 </body>
 </html>"""
 
-        # Generate PDF directly using xhtml2pdf
-        pdf_path = output_path if output_path.endswith('.pdf') else output_path + '.pdf'
-
-        with open(pdf_path, 'wb') as pdf_file:
-            # Convert HTML to PDF
-            pisa_status = pisa.CreatePDF(
-                styled_html,
-                dest=pdf_file
-            )
+        # Generate PDF to in-memory buffer
+        pdf_buffer = BytesIO()
+        pisa_status = pisa.CreatePDF(
+            styled_html,
+            dest=pdf_buffer
+        )
 
         if pisa_status.err:
             raise Exception(f"PDF generation had errors")
 
-        return pdf_path
+        # Get PDF bytes
+        pdf_bytes = pdf_buffer.getvalue()
+        pdf_buffer.close()
+
+        return pdf_bytes
 
     except Exception as e:
         print(f"PDF generation error: {e}")

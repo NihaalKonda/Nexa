@@ -14,6 +14,8 @@ export async function GET(
     }
 
     const { id } = await params
+    const { searchParams } = new URL(req.url)
+    const format = searchParams.get('format') || 'pdf'
 
     const rfp = await prisma.rFP.findFirst({
       where: {
@@ -36,6 +38,27 @@ export async function GET(
       return NextResponse.json({ error: "RFP not found" }, { status: 404 })
     }
 
+    // If requesting PDF, serve the PDF content
+    if (format === 'pdf' && rfp.pdfContent) {
+      return new NextResponse(Buffer.from(rfp.pdfContent), {
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `inline; filename="${rfp.filename || 'rfp.pdf'}"`,
+        },
+      })
+    }
+
+    // If requesting HTML, serve the HTML content
+    if (format === 'html' && rfp.htmlContent) {
+      return new NextResponse(rfp.htmlContent, {
+        headers: {
+          "Content-Type": "text/html",
+          "Content-Disposition": "inline",
+        },
+      })
+    }
+
+    // Default: return JSON
     return NextResponse.json(rfp)
   } catch (error) {
     console.error("RFP fetch error:", error)

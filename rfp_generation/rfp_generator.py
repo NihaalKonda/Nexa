@@ -1,9 +1,10 @@
 from datetime import date
 from jinja2 import Environment, FileSystemLoader
 import os
+import base64
 from rfp_generation.prompts.rfp_prompts import rfp_prompt_templates
 from rfp_generation.utils.gpt_client import generate_section
-from rfp_generation.utils.pdf_utils import markdown_to_pdf
+from rfp_generation.utils.pdf_utils import markdown_to_pdf_content
 
 
 def generate_rfp_from_supplier(supplier_data: dict, search_data: dict, rfp_requirements: dict) -> dict:
@@ -54,23 +55,21 @@ def generate_rfp_from_supplier(supplier_data: dict, search_data: dict, rfp_requi
     template = env.get_template("rfp_template.md.j2")
     rfp_markdown = template.render(rfp_context)
 
-    # Generate HTML (PDF-ready document)
-    output_dir = os.path.join(os.path.dirname(__file__), "..", "data", "rfp_outputs")
-    os.makedirs(output_dir, exist_ok=True)
+    # Generate PDF content in memory (no file saving)
+    pdf_bytes = markdown_to_pdf_content(rfp_markdown)
 
+    # Encode PDF to base64 for transmission
+    pdf_base64 = base64.b64encode(pdf_bytes).decode('utf-8')
+
+    # Generate filename for reference
     timestamp = date.today().strftime("%Y%m%d")
     supplier_name_clean = supplier_data.get("name", "unknown").replace(" ", "_").replace("/", "_")
     pdf_filename = f"rfp_{supplier_name_clean}_{timestamp}.pdf"
-    pdf_path = os.path.join(output_dir, pdf_filename)
-
-    # This actually returns .html path now (pdf_utils was updated)
-    actual_path = markdown_to_pdf(rfp_markdown, pdf_path)
-    actual_filename = os.path.basename(actual_path)
 
     return {
         "markdown": rfp_markdown,
-        "pdf_path": actual_path,
-        "pdf_filename": actual_filename
+        "pdf_content": pdf_base64,
+        "pdf_filename": pdf_filename
     }
 
 
