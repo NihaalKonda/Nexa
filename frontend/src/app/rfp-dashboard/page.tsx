@@ -185,13 +185,22 @@ export default function RFPDashboard() {
                         </td>
                         <td className="px-6 py-4 text-sm text-slate-600">{formatDate(rfp.createdAt)}</td>
                         <td className="px-6 py-4">
-                          <Button
-                            onClick={() => handleViewRFP(rfp.id)}
-                            variant="outline"
-                            size="sm"
-                          >
-                            View PDF
-                          </Button>
+                          <div className="flex gap-2">
+                            <Button
+                              onClick={() => router.push(`/rfp/edit/${rfp.id}`)}
+                              variant="outline"
+                              size="sm"
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              onClick={() => handleViewRFP(rfp.id)}
+                              variant="outline"
+                              size="sm"
+                            >
+                              View PDF
+                            </Button>
+                          </div>
                         </td>
                       </tr>
                     ))}

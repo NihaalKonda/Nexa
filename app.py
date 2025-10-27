@@ -738,6 +738,41 @@ def api_generate_rfp():
 # Use Next.js API route /api/rfp/[rfpId] instead
 
 
+@app.route('/api/rfp/regenerate-pdf', methods=['POST'])
+def api_regenerate_pdf():
+    """Regenerate PDF from markdown content"""
+    try:
+        data = request.json
+        markdown_text = data.get('markdown', '')
+
+        if not markdown_text:
+            return jsonify({"error": "Markdown content is required"}), 400
+
+        # Import the PDF generation function
+        from rfp_generation.utils.pdf_utils import markdown_to_pdf_content
+        import base64
+
+        # Generate PDF from markdown
+        pdf_bytes = markdown_to_pdf_content(markdown_text)
+
+        # Encode to base64
+        pdf_base64 = base64.b64encode(pdf_bytes).decode('utf-8')
+
+        return jsonify({
+            "success": True,
+            "pdf_content": pdf_base64
+        })
+
+    except Exception as e:
+        print(f"PDF regeneration error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            "error": str(e),
+            "success": False
+        }), 500
+
+
 # ============================================================
 # 8. RUN THE APP
 # ============================================================

@@ -34,6 +34,10 @@ export default function GenerateRFPPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [generatedRFP, setGeneratedRFP] = useState<any>(null)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editedMarkdown, setEditedMarkdown] = useState("")
+  const [editedTitle, setEditedTitle] = useState("")
+  const [saving, setSaving] = useState(false)
 
   // Redirect to signin if not authenticated
   useEffect(() => {
@@ -198,6 +202,61 @@ export default function GenerateRFPPage() {
 
       // Clean up the URL after a delay
       setTimeout(() => URL.revokeObjectURL(url), 1000)
+    }
+  }
+
+  const handleEditClick = () => {
+    setEditedMarkdown(generatedRFP.markdown)
+    setEditedTitle(title)
+    setIsEditing(true)
+  }
+
+  const handleCancelEdit = () => {
+    setIsEditing(false)
+    setEditedMarkdown("")
+    setEditedTitle("")
+  }
+
+  const handleSaveEdit = async () => {
+    if (!generatedRFP.rfpId) {
+      setError("Cannot edit RFP: No RFP ID found")
+      return
+    }
+
+    try {
+      setSaving(true)
+      setError("")
+
+      const response = await fetch(`/api/rfp/${generatedRFP.rfpId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: editedTitle,
+          bodyMd: editedMarkdown,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to save changes")
+      }
+
+      const updatedData = await response.json()
+
+      // Update the generated RFP with new content
+      setGeneratedRFP((prev: any) => ({
+        ...prev,
+        markdown: editedMarkdown,
+        pdf_content: updatedData.pdfContent ? updatedData.pdfContent : prev.pdf_content,
+      }))
+      setTitle(editedTitle)
+      setIsEditing(false)
+    } catch (err) {
+      console.error("Error saving RFP:", err)
+      setError("Failed to save changes")
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -510,45 +569,112 @@ export default function GenerateRFPPage() {
           {generatedRFP && (
             <div className="mt-8 bg-white rounded-2xl shadow-xl p-8 border border-slate-200">
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-slate-900">Generated RFP</h2>
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(generatedRFP.markdown)
-                      alert("RFP copied to clipboard!")
-                    }}
-                    className="px-4 py-2 text-sm font-medium text-slate-600 border-2 border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
-                  >
-                    Copy Markdown
-                  </button>
-                  <Button
-                    onClick={handleViewRFP}
-                    variant="hero"
-                    className="hover:shadow-md hover:scale-[1.02] transition-transform"
-                  >
-                    View Document
-                  </Button>
-                </div>
+                <h2 className="text-2xl font-bold text-slate-900">
+                  {isEditing ? "Edit RFP" : "Generated RFP"}
+                </h2>
+                {!isEditing ? (
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(generatedRFP.markdown)
+                        alert("RFP copied to clipboard!")
+                      }}
+                      className="px-4 py-2 text-sm font-medium text-slate-600 border-2 border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
+                    >
+                      Copy Markdown
+                    </button>
+                    <button
+                      onClick={handleEditClick}
+                      className="px-4 py-2 text-sm font-medium text-slate-600 border-2 border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
+                    >
+                      Edit
+                    </button>
+                    <Button
+                      onClick={handleViewRFP}
+                      variant="hero"
+                      className="hover:shadow-md hover:scale-[1.02] transition-transform"
+                    >
+                      View Document
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex gap-3">
+                    <Button
+                      onClick={handleCancelEdit}
+                      variant="ghost"
+                      size="sm"
+                      disabled={saving}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleSaveEdit}
+                      variant="hero"
+                      size="sm"
+                      disabled={saving}
+                      className="hover:shadow-md hover:scale-[1.02] transition-transform"
+                    >
+                      {saving ? "Saving..." : "Save Changes"}
+                    </Button>
+                  </div>
+                )}
               </div>
 
-              <div className="prose max-w-none">
-                <div className="p-6 bg-slate-50 rounded-lg border border-slate-200 whitespace-pre-wrap font-mono text-sm">
-                  {generatedRFP.markdown}
-                </div>
-              </div>
+              {isEditing ? (
+                <div className="space-y-6">
+                  {/* Title Input */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      RFP Title
+                    </label>
+                    <input
+                      type="text"
+                      value={editedTitle}
+                      onChange={(e) => setEditedTitle(e.target.value)}
+                      className="w-full px-4 py-3 border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+                      placeholder="Enter RFP title"
+                    />
+                  </div>
 
-              <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-                <div className="flex items-start gap-3">
-                  <svg className="w-5 h-5 text-green-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
-                  </svg>
-                  <div className="text-sm text-green-800 flex-1">
-                    <p className="font-semibold">RFP Generated Successfully!</p>
-                    <p className="mt-1">Click "View RFP Document" above to open it. The document has a "Print/Save as PDF" button in the top right corner.</p>
-                    <p className="mt-2 text-xs opacity-75">File: {generatedRFP.pdf_filename}</p>
+                  {/* Markdown Editor */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      RFP Content (Markdown)
+                    </label>
+                    <textarea
+                      value={editedMarkdown}
+                      onChange={(e) => setEditedMarkdown(e.target.value)}
+                      className="w-full px-4 py-3 border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors font-mono text-sm"
+                      rows={20}
+                      placeholder="Enter RFP content in markdown format"
+                    />
+                    <p className="mt-2 text-xs text-slate-500">
+                      Use markdown syntax for formatting (e.g., # for headers, ** for bold, - for lists)
+                    </p>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <>
+                  <div className="prose max-w-none">
+                    <div className="p-6 bg-slate-50 rounded-lg border border-slate-200 whitespace-pre-wrap font-mono text-sm">
+                      {generatedRFP.markdown}
+                    </div>
+                  </div>
+
+                  <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <svg className="w-5 h-5 text-green-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                      </svg>
+                      <div className="text-sm text-green-800 flex-1">
+                        <p className="font-semibold">RFP Generated Successfully!</p>
+                        <p className="mt-1">Click "View Document" above to open it. The document has a "Print/Save as PDF" button in the top right corner.</p>
+                        <p className="mt-2 text-xs opacity-75">File: {generatedRFP.pdf_filename}</p>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           )}
         </div>

@@ -82,17 +82,43 @@ export async function PATCH(
     const { id } = await params
     const { title, bodyMd, draftJson, status } = await req.json()
 
+    // Prepare update data
+    const updateData: any = {}
+    if (title) updateData.title = title
+    if (bodyMd !== undefined) updateData.bodyMd = bodyMd
+    if (draftJson) updateData.draftJson = draftJson
+    if (status) updateData.status = status
+
+    // If bodyMd is being updated, regenerate PDF
+    if (bodyMd !== undefined) {
+      try {
+        // Call Python backend to regenerate PDF from markdown
+        const pdfResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001'}/api/rfp/regenerate-pdf`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ markdown: bodyMd }),
+        })
+
+        if (pdfResponse.ok) {
+          const pdfData = await pdfResponse.json()
+          if (pdfData.pdf_content) {
+            updateData.pdfContent = Buffer.from(pdfData.pdf_content, 'base64')
+          }
+        }
+      } catch (pdfError) {
+        console.error("PDF regeneration error:", pdfError)
+        // Continue with update even if PDF regeneration fails
+      }
+    }
+
     const rfp = await prisma.rFP.updateMany({
       where: {
         id,
         companyId: (session.user as any).companyId,
       },
-      data: {
-        ...(title && { title }),
-        ...(bodyMd && { bodyMd }),
-        ...(draftJson && { draftJson }),
-        ...(status && { status }),
-      },
+      data: updateData,
     })
 
     if (rfp.count === 0) {
