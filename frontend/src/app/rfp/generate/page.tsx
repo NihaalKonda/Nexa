@@ -279,7 +279,7 @@ export default function GenerateRFPPage() {
               </span>
             </Link>
 
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-4">
               <span className="text-base font-medium text-slate-700">{session.user?.name}</span>
               <Button
                 onClick={() => {
