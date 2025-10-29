@@ -41,7 +41,9 @@ model Company {
   slug      String    @unique
   email     String    @unique
   password  String    // hashed
+  industry  String?
   city      String?
+  state     String?
   country   String?
   sessions  Session[]
   rfps      RFP[]

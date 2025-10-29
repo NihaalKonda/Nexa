@@ -15,7 +15,6 @@ export default function GenerateRFPPage() {
 
   const [supplier, setSupplier] = useState<Supplier | null>(null)
   const [title, setTitle] = useState("")
-  const [industry, setIndustry] = useState("")
   const [location, setLocation] = useState("")
   const [deliveryDate, setDeliveryDate] = useState("")
   const [budget, setBudget] = useState("")
@@ -59,7 +58,6 @@ export default function GenerateRFPPage() {
         const parsedSupplier = JSON.parse(supplierParam)
         setSupplier(parsedSupplier)
         setTitle(`RFP for ${parsedSupplier.product_title || productParam}`)
-        setIndustry(productParam || "")
         setLocation(locationParam || parsedSupplier.location || "")
 
         if (priceMinParam && priceMaxParam) {
@@ -106,14 +104,14 @@ export default function GenerateRFPPage() {
         body: JSON.stringify({
           supplier: supplier,
           search_data: {
-            product: searchParams.get("product") || industry,
+            product: searchParams.get("product") || (session.user as any)?.industry || "",
             location: searchParams.get("location") || location,
             priceMin: searchParams.get("priceMin") || "",
             priceMax: searchParams.get("priceMax") || "",
           },
           rfp_requirements: {
             title,
-            industry,
+            industry: (session.user as any)?.industry || "",
             location,
             deliveryDate,
             budget,
@@ -371,31 +369,17 @@ export default function GenerateRFPPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Industry
-                  </label>
-                  <input
-                    type="text"
-                    value={industry}
-                    onChange={(e) => setIndustry(e.target.value)}
-                    placeholder="e.g., Industrial Materials"
-                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Delivery Location
-                  </label>
-                  <input
-                    type="text"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    placeholder="e.g., Buffalo, New York"
-                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Delivery Location
+                </label>
+                <input
+                  type="text"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  placeholder="e.g., Buffalo, New York"
+                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-4">

@@ -45,6 +45,10 @@ export const authOptions: NextAuthOptions = {
           id: company.id,
           email: company.email,
           name: company.name,
+          industry: company.industry,
+          city: company.city,
+          state: company.state,
+          country: company.country,
         }
       },
     }),
@@ -55,6 +59,10 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id
         token.email = user.email
         token.name = user.name
+        token.industry = (user as any).industry
+        token.city = (user as any).city
+        token.state = (user as any).state
+        token.country = (user as any).country
       }
       return token
     },
@@ -64,6 +72,10 @@ export const authOptions: NextAuthOptions = {
         ;(session.user as any).companyId = token.id // Company ID is the same as user ID now
         session.user.email = token.email as string
         session.user.name = token.name as string
+        ;(session.user as any).industry = token.industry as string | null
+        ;(session.user as any).city = token.city as string | null
+        ;(session.user as any).state = token.state as string | null
+        ;(session.user as any).country = token.country as string | null
       }
       return session
     },

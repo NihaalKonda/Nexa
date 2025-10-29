@@ -13,7 +13,9 @@ export default function SignUpPage() {
     email: "",
     password: "",
     confirmPassword: "",
+    industry: "",
     city: "",
+    state: "",
     country: "",
   })
   const [loading, setLoading] = useState(false)
@@ -47,7 +49,9 @@ export default function SignUpPage() {
           name: formData.name,
           email: formData.email,
           password: formData.password,
+          industry: formData.industry || undefined,
           city: formData.city || undefined,
+          state: formData.state || undefined,
           country: formData.country || undefined,
         }),
       })
@@ -127,6 +131,20 @@ export default function SignUpPage() {
 
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
+                Industry *
+              </label>
+              <input
+                type="text"
+                value={formData.industry}
+                onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
+                className="w-full px-4 py-3 border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+                placeholder="e.g., Manufacturing, Technology, Healthcare"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
                 Password *
               </label>
               <input
@@ -155,7 +173,7 @@ export default function SignUpPage() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
                   City
@@ -166,6 +184,19 @@ export default function SignUpPage() {
                   onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                   className="w-full px-4 py-3 border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
                   placeholder="New York"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  State
+                </label>
+                <input
+                  type="text"
+                  value={formData.state}
+                  onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+                  placeholder="NY"
                 />
               </div>
 

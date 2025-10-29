@@ -33,7 +33,7 @@ def generate_rfp_from_supplier(supplier_data: dict, search_data: dict, rfp_requi
     rfp_context = {
         "project_title": sections["Project"],
         "client_name": rfp_requirements.get("client_name", "Nexa"),
-        "client_industry": search_data.get("product", "Procurement"),
+        "client_industry": rfp_requirements.get("industry", "Procurement"),
         "rfp_date": date.today().strftime("%B %d, %Y"),
         "introduction": sections["Introduction"],
         "scope_of_work": sections["ScopeOfWork"],
