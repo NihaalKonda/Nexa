@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useSession, signOut } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
@@ -8,7 +8,7 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { searchSuppliers, searchSuppliersDetailed, type Supplier } from "@/lib/api"
 
-export default function SearchGPTPage() {
+function SearchGPTContent() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -523,5 +523,20 @@ export default function SearchGPTPage() {
         )}
       </main>
     </div>
+  )
+}
+
+export default function SearchGPTPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
+          <p className="mt-4 text-slate-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <SearchGPTContent />
+    </Suspense>
   )
 }
