@@ -9,7 +9,14 @@ from geopy.distance import geodesic
 import numpy as np
 import nltk
 from nltk.sentiment import SentimentIntensityAnalyzer
-from rfp_generation.rfp_generator import generate_rfp_from_supplier
+
+# Import RFP generator (optional - only needed for RFP generation endpoint)
+try:
+    from rfp_generation.rfp_generator import generate_rfp_from_supplier
+    RFP_GENERATION_AVAILABLE = True
+except ImportError as e:
+    print(f"⚠️  RFP generation not available: {e}")
+    RFP_GENERATION_AVAILABLE = False
 
 # Load environment variables
 load_dotenv()
@@ -666,6 +673,12 @@ def api_generate_rfp():
         }
     }
     """
+    if not RFP_GENERATION_AVAILABLE:
+        return jsonify({
+            "error": "RFP generation is not available. Missing required dependencies.",
+            "success": False
+        }), 503
+
     try:
         data = request.get_json()
 
@@ -721,6 +734,12 @@ def api_generate_rfp():
 @app.route('/api/rfp/regenerate-pdf', methods=['POST'])
 def api_regenerate_pdf():
     """Regenerate PDF from markdown content"""
+    if not RFP_GENERATION_AVAILABLE:
+        return jsonify({
+            "error": "RFP generation is not available. Missing required dependencies.",
+            "success": False
+        }), 503
+
     try:
         data = request.json
         markdown_text = data.get('markdown', '')
