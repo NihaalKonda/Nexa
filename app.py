@@ -35,7 +35,10 @@ CORS(app, resources={
             "http://127.0.0.1:3001",
             "http://127.0.0.1:5001",
             "http://10.173.105.175:3000",
-            "http://10.173.105.175:3001"
+            "http://10.173.105.175:3001",
+            "https://www.trynexa.org",
+            "https://trynexa.org",
+            "https://*.vercel.app"
         ],
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"],
