@@ -85,7 +85,7 @@ def search_suppliers(product, location, price_min, price_max):
     """
 
     response = client.responses.create(
-        model="gpt-5",
+        model="gpt-4o",
         reasoning={"effort": "low"},
         tools=[{"type": "web_search"}],
         input=query
