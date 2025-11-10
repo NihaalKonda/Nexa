@@ -61,19 +61,19 @@ sentiment_analyzer = SentimentIntensityAnalyzer()
 # ============================================================
 def search_suppliers(product, location, price_min, price_max):
     query = f"""
-    Search the web for suppliers that sell **{product}** in **{location}**.
+    Search the web for 10 suppliers that sell **{product}** in **{location}**.
     Include local manufacturers, distributors, and wholesalers.
     Prefer suppliers offering prices between ${price_min} and ${price_max}.
-    If you can't find suppliers or are unsure, return none.
 
-    For each supplier, include:
-    - 'product_title': the specific item or SKU (e.g., "5052-H32 Aluminum Sheet 4x8")
-    - 'units_sold': the unit of sale (e.g., "per sheet", "per pound", "per roll", "per foot") 
-      — or, if available, the quantity currently in stock / available for purchase.
-    - 'price_range': exact price if available or range (e.g., "$85 per sheet" or "$2.50–$3.00 per lb")
-    - 'website': supplier’s main website
-    - 'contact': email or phone number
-    - 'description': short description of the supplier or product focus
+    For each supplier found, provide:
+    - name: Company name
+    - location: City, State
+    - product_title: Specific item or SKU (e.g., "5052-H32 Aluminum Sheet 4x8")
+    - units_sold: Unit of sale (e.g., "per sheet", "per pound", "per roll") or quantity available
+    - price_range: Exact price or range (e.g., "$85 per sheet" or "$2.50–$3.00 per lb")
+    - website: Company website URL
+    - contact: Email or phone number
+    - description: Short description of the supplier or product focus
 
     Return a valid JSON list:
     [
@@ -88,20 +88,16 @@ def search_suppliers(product, location, price_min, price_max):
         "description": "short summary"
       }}
     ]
-    Up to 30 suppliers - as many as possible.
     """
 
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=[
-            {"role": "system", "content": "You are a helpful assistant that searches for suppliers and returns valid JSON."},
-            {"role": "user", "content": query}
-        ],
-        max_tokens=2500,
-        temperature=0.7,
+    response = client.responses.create(
+        model="gpt-5",
+        reasoning={"effort": "low"},
+        tools=[{"type": "web_search"}],
+        input=query
     )
 
-    text = response.choices[0].message.content
+    text = response.output_text
 
     # Try to extract JSON from the response
     try:
@@ -181,22 +177,19 @@ def fetch_past_contracts(company_name):
 def fetch_web_reviews(company_name, location):
     query = f"""
     Search the web for reviews, customer feedback, or past project/contract mentions
-    for the supplier **{company_name}** located near **{location}**.
+    for the supplier {company_name} located near {location}.
     Include Google reviews, Yelp, BBB, or industry references.
     Summarize the overall reputation and any known contract/project mentions.
     Return a concise 2–4 sentence summary.
     """
     try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant that searches for company reviews and reputation information."},
-                {"role": "user", "content": query}
-            ],
-            max_tokens=400,
-            temperature=0.7,
+        response = client.responses.create(
+            model="gpt-5",
+            reasoning={"effort": "low"},
+            tools=[{"type": "web_search"}],
+            input=query
         )
-        return response.choices[0].message.content.strip()
+        return response.output_text.strip()
     except Exception as e:
         return f"Error fetching reviews: {e}"
 
