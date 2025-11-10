@@ -92,22 +92,29 @@ def search_suppliers(product, location, price_min, price_max):
 
     text = response.output_text
 
+    # Debug: print what we got from OpenAI
+    print(f"📝 OpenAI Response (first 500 chars): {text[:500]}")
+
     # Try to extract JSON from the response
     try:
         # First, try to parse the entire response as JSON
         suppliers = json.loads(text)
-    except Exception:
+    except Exception as e:
+        print(f"⚠️ Failed to parse as JSON directly: {e}")
         # If that fails, try to find JSON within the text (GPT might add explanation text)
         import re
         json_match = re.search(r'\[.*\]', text, re.DOTALL)
         if json_match:
             try:
                 suppliers = json.loads(json_match.group(0))
-            except Exception:
-                print("⚠️ Could not parse GPT output; returning empty list.")
+                print(f"✅ Successfully extracted JSON array from response")
+            except Exception as e2:
+                print(f"⚠️ Could not parse extracted JSON: {e2}")
+                print(f"📄 Full response text: {text}")
                 suppliers = []
         else:
-            print("⚠️ No JSON found in GPT output; returning empty list.")
+            print(f"⚠️ No JSON array found in GPT output")
+            print(f"📄 Full response text: {text}")
             suppliers = []
 
     # Ensure all suppliers have required fields
