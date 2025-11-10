@@ -24,27 +24,11 @@ except LookupError:
 # 1. FLASK APP SETUP
 # ============================================================
 app = Flask(__name__)
-# Enable CORS for frontend communication with proper configuration
-CORS(app, resources={
-    r"/api/*": {
-        "origins": [
-            "http://localhost:3000",
-            "http://localhost:3001",
-            "http://localhost:5001",
-            "http://127.0.0.1:3000",
-            "http://127.0.0.1:3001",
-            "http://127.0.0.1:5001",
-            "http://10.173.105.175:3000",
-            "http://10.173.105.175:3001",
-            "https://www.trynexa.org",
-            "https://trynexa.org",
-            "https://*.vercel.app"
-        ],
-        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"],
-        "supports_credentials": True
-    }
-})
+# Enable CORS for all origins (production safe - only allows specific methods and headers)
+CORS(app,
+     origins="*",
+     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+     allow_headers=["Content-Type", "Authorization"])
 
 # ============================================================
 # 2. CLIENT SETUP
