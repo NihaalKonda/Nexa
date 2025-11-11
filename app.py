@@ -512,31 +512,51 @@ def rank_suppliers(suppliers, search_product, search_location, price_min, price_
 # 7. COMBINE EVERYTHING
 # ============================================================
 def get_suppliers_with_contracts_and_reviews(product, location, price_min, price_max):
-    suppliers = search_suppliers(product, location, price_min, price_max)
-    enriched = []
+    try:
+        suppliers = search_suppliers(product, location, price_min, price_max)
 
-    for s in suppliers:
-        name = s.get("name")
-        print(f"🔍 Checking contracts and reviews for {name}...")
+        if not suppliers:
+            print("⚠️ No suppliers returned from search_suppliers()")
+            return pd.DataFrame()
 
-        # Add government past contracts
-        contracts = fetch_past_contracts(name) if name else "None"
+        enriched = []
 
-        # Add online reviews
-        reviews = fetch_web_reviews(name, location) if name else "None"
+        for s in suppliers:
+            name = s.get("name")
+            print(f"🔍 Checking contracts and reviews for {name}...")
 
-        # Fill missing new fields if GPT skips them
-        s["product_title"] = s.get("product_title", "N/A")
-        s["units_sold"] = s.get("units_sold", "N/A")
-        s["past_contracts"] = contracts
-        s["reviews_mentions"] = reviews
+            try:
+                # Add government past contracts
+                contracts = fetch_past_contracts(name) if name else "None"
+            except Exception as e:
+                print(f"⚠️ Error fetching contracts for {name}: {e}")
+                contracts = "Error fetching contracts"
 
-        enriched.append(s)
-        time.sleep(2)
+            try:
+                # Add online reviews
+                reviews = fetch_web_reviews(name, location) if name else "None"
+            except Exception as e:
+                print(f"⚠️ Error fetching reviews for {name}: {e}")
+                reviews = "Error fetching reviews"
 
-    df = pd.DataFrame(enriched)
-    df.to_csv("suppliers_with_contracts_reviews_units.csv", index=False)
-    return df
+            # Fill missing new fields if GPT skips them
+            s["product_title"] = s.get("product_title", "N/A")
+            s["units_sold"] = s.get("units_sold", "N/A")
+            s["past_contracts"] = contracts
+            s["reviews_mentions"] = reviews
+
+            enriched.append(s)
+            time.sleep(2)
+
+        df = pd.DataFrame(enriched)
+        df.to_csv("suppliers_with_contracts_reviews_units.csv", index=False)
+        print(f"✅ Returning DataFrame with {len(df)} suppliers")
+        return df
+    except Exception as e:
+        print(f"❌ Error in get_suppliers_with_contracts_and_reviews: {e}")
+        import traceback
+        traceback.print_exc()
+        raise
 
 
 # ============================================================
@@ -644,6 +664,9 @@ def api_search_suppliers_detailed():
         })
 
     except Exception as e:
+        print(f"❌ Error in api_search_suppliers_detailed: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({
             "error": str(e),
             "success": False
