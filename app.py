@@ -56,7 +56,7 @@ sentiment_analyzer = SentimentIntensityAnalyzer()
 def search_suppliers(product, location, price_min, price_max):
     print(f"🔍 Searching for: product='{product}', location='{location}', price=${price_min}-${price_max}")
     query = f"""
-    Search the web for 10 suppliers that sell **{product}** in **{location}**.
+    Search the web for 5 suppliers that sell **{product}** in **{location}**.
     Include local manufacturers, distributors, and wholesalers.
     Prefer suppliers offering prices between ${price_min} and ${price_max}.
 
@@ -91,6 +91,7 @@ def search_suppliers(product, location, price_min, price_max):
     try:
         response = client.responses.create(
             model="gpt-5",
+            reasoning={"effort": "low"},
             tools=[{"type": "web_search"}],
             input=query
         )
@@ -137,7 +138,7 @@ def search_suppliers(product, location, price_min, price_max):
         import re
 
         # Try to find JSON in markdown code blocks (```json ... ```)
-        code_block_match = re.search(r'```(?:json)?\s*(\[.*?\])\s*```', text_sanitized, re.DOTALL)
+        code_block_match = re.search(r'```(?:json)?\s*(\[[\s\S]*?\])\s*```', text_sanitized)
         if code_block_match:
             try:
                 suppliers = json.loads(code_block_match.group(1))
@@ -150,31 +151,58 @@ def search_suppliers(product, location, price_min, price_max):
         # If code block parsing failed or no code block found, use bracket counting
         if not code_block_match:
             # Use bracket counting to find the complete JSON array
+            # Look for array that starts with [{ to avoid markdown links like [text]
             try:
-                # Find the opening bracket
-                start = text_sanitized.find('[')
-                if start != -1:
+                # Find the opening bracket followed by an object
+                array_start_match = re.search(r'\[\s*\{', text_sanitized)
+                if array_start_match:
+                    start = array_start_match.start()
                     # Count brackets to find the matching closing bracket
                     bracket_count = 0
-                    for i, char in enumerate(text_sanitized[start:], start):
-                        if char == '[':
-                            bracket_count += 1
-                        elif char == ']':
-                            bracket_count -= 1
-                            if bracket_count == 0:
-                                json_str = text_sanitized[start:i+1]
-                                try:
-                                    suppliers = json.loads(json_str)
-                                    print(f"✅ Successfully extracted JSON with bracket counting")
-                                except json.JSONDecodeError as je:
-                                    # Print the area around the error for debugging
-                                    error_pos = je.pos
-                                    start_debug = max(0, error_pos - 100)
-                                    end_debug = min(len(json_str), error_pos + 100)
-                                    print(f"⚠️ JSON error at position {error_pos}:")
-                                    print(f"Context: ...{json_str[start_debug:end_debug]}...")
-                                    raise
-                                break
+                    brace_count = 0
+                    in_string = False
+                    escape_next = False
+
+                    for i in range(start, len(text_sanitized)):
+                        char = text_sanitized[i]
+
+                        # Handle string escaping
+                        if escape_next:
+                            escape_next = False
+                            continue
+                        if char == '\\':
+                            escape_next = True
+                            continue
+
+                        # Track if we're inside a string
+                        if char == '"':
+                            in_string = not in_string
+                            continue
+
+                        # Only count brackets/braces outside of strings
+                        if not in_string:
+                            if char == '[':
+                                bracket_count += 1
+                            elif char == ']':
+                                bracket_count -= 1
+                                if bracket_count == 0:
+                                    json_str = text_sanitized[start:i+1]
+                                    try:
+                                        suppliers = json.loads(json_str)
+                                        print(f"✅ Successfully extracted JSON with bracket counting")
+                                    except json.JSONDecodeError as je:
+                                        # Print the area around the error for debugging
+                                        error_pos = je.pos
+                                        start_debug = max(0, error_pos - 100)
+                                        end_debug = min(len(json_str), error_pos + 100)
+                                        print(f"⚠️ JSON error at position {error_pos}:")
+                                        print(f"Context: ...{json_str[start_debug:end_debug]}...")
+                                        raise
+                                    break
+                            elif char == '{':
+                                brace_count += 1
+                            elif char == '}':
+                                brace_count -= 1
                     else:
                         print(f"⚠️ Could not find matching closing bracket")
                         suppliers = []
@@ -255,6 +283,7 @@ def fetch_web_reviews(company_name, location):
     try:
         response = client.responses.create(
             model="gpt-5",
+            reasoning={"effort": "low"},
             tools=[{"type": "web_search"}],
             input=query
         )
