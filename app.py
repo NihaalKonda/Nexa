@@ -218,8 +218,7 @@ def fetch_web_reviews(company_name, location):
     """
     try:
         response = client.responses.create(
-            model="gpt-5",
-            reasoning={"effort": "low"},
+            model="gpt-4o",
             tools=[{"type": "web_search"}],
             input=query
         )
