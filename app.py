@@ -54,6 +54,7 @@ sentiment_analyzer = SentimentIntensityAnalyzer()
 # 3. GPT SEARCH FOR SUPPLIERS
 # ============================================================
 def search_suppliers(product, location, price_min, price_max):
+    print(f"🔍 Searching for: product='{product}', location='{location}', price=${price_min}-${price_max}")
     query = f"""
     Search the web for 10 suppliers that sell **{product}** in **{location}**.
     Include local manufacturers, distributors, and wholesalers.
@@ -196,7 +197,9 @@ def search_suppliers(product, location, price_min, price_max):
                 "description": supplier.get("description", "No description available")
             })
 
-    return formatted_suppliers if formatted_suppliers else suppliers
+    result = formatted_suppliers if formatted_suppliers else suppliers
+    print(f"✅ Returning {len(result)} suppliers from search_suppliers()")
+    return result
 
 
 # ============================================================
