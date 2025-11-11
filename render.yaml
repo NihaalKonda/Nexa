@@ -3,7 +3,7 @@ services:
     name: nexa-backend
     env: python
     buildCommand: pip install -r requirements.txt && python -c "import nltk; nltk.download('vader_lexicon')"
-    startCommand: "gunicorn app:app --config gunicorn_config.py"
+    startCommand: "gunicorn app:app --bind 0.0.0.0:$PORT --timeout 1800 --graceful-timeout 1800 --workers 2 --worker-class sync --log-level info"
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
@@ -11,3 +11,7 @@ services:
         value: production
       - key: OPENAI_API_KEY
         sync: false
+      - key: WEB_CONCURRENCY
+        value: "2"
+      - key: TIMEOUT
+        value: "1800"
