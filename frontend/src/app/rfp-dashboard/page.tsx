@@ -22,6 +22,7 @@ export default function RFPDashboard() {
   const [rfps, setRfps] = useState<RFP[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   // Redirect to signin if not authenticated
   useEffect(() => {
@@ -91,28 +92,30 @@ export default function RFPDashboard() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100">
-        <div className="container mx-auto px-6 py-4">
+        <div className="container mx-auto px-3 md:px-6 py-3 md:py-4">
           <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity">
+            <Link href="/" className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
               <Image
                 src="/nexa_logo.png"
                 alt="Nexa Logo"
-                width={40}
-                height={40}
-                className="h-10 w-10"
+                width={32}
+                height={32}
+                className="h-8 w-8"
               />
-              <span className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+              <span className="text-xl lg:text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
                 Nexa
               </span>
             </Link>
 
-            <div className="flex items-center gap-6">
+            {/* Desktop Navigation */}
+            <div className="hidden lg:flex items-center gap-6">
               <span className="text-base font-medium text-slate-700">{session.user?.name}</span>
               <Button
                 onClick={() => {
                   router.push("/supplier-search")
                 }}
                 variant="ghost"
+                className="text-sm px-4 py-2"
               >
                 Supplier Search
               </Button>
@@ -121,12 +124,65 @@ export default function RFPDashboard() {
                   signOut({ callbackUrl: "/" })
                 }}
                 variant="ghost"
-                className="text-red-600 hover:text-red-700"
+                className="text-red-600 hover:text-red-700 text-sm px-4 py-2"
               >
                 Sign Out
               </Button>
             </div>
+
+            {/* Mobile Hamburger Menu */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden p-2 text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+              aria-label="Toggle menu"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                {mobileMenuOpen ? (
+                  <path d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path d="M4 6h16M4 12h16M4 18h16" />
+                )}
+              </svg>
+            </button>
           </div>
+
+          {/* Mobile Dropdown Menu */}
+          {mobileMenuOpen && (
+            <div className="lg:hidden mt-4 py-4 border-t border-gray-200">
+              <div className="flex flex-col space-y-3">
+                <div className="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-50 rounded-lg">
+                  {session.user?.name}
+                </div>
+                <Button
+                  onClick={() => {
+                    router.push("/supplier-search")
+                    setMobileMenuOpen(false)
+                  }}
+                  variant="ghost"
+                  className="justify-start text-sm px-4 py-2"
+                >
+                  Supplier Search
+                </Button>
+                <Button
+                  onClick={() => {
+                    signOut({ callbackUrl: "/" })
+                  }}
+                  variant="ghost"
+                  className="justify-start text-red-600 hover:text-red-700 text-sm px-4 py-2"
+                >
+                  Sign Out
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </header>
 

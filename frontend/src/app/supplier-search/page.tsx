@@ -23,6 +23,7 @@ function SearchGPTContent() {
   const [loadingSession, setLoadingSession] = useState(false)
   const [successMessage, setSuccessMessage] = useState("")
   const [sortBy, setSortBy] = useState<"score" | "price" | "contracts">("score")
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   // Redirect to signin if not authenticated
   useEffect(() => {
@@ -190,28 +191,30 @@ function SearchGPTContent() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100">
-        <div className="container mx-auto px-6 py-4">
+        <div className="container mx-auto px-3 md:px-6 py-3 md:py-4">
           <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity">
+            <Link href="/" className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
               <Image
                 src="/nexa_logo.png"
                 alt="Nexa Logo"
-                width={40}
-                height={40}
-                className="h-10 w-10"
+                width={32}
+                height={32}
+                className="h-8 w-8"
               />
-              <span className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+              <span className="text-xl lg:text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
                 Nexa
               </span>
             </Link>
 
-            <div className="flex items-center gap-6">
+            {/* Desktop Navigation */}
+            <div className="hidden lg:flex items-center gap-6">
               <span className="text-base font-medium text-slate-700">{session.user?.name}</span>
               <Button
                 onClick={() => {
                   router.push("/rfp-dashboard")
                 }}
                 variant="ghost"
+                className="text-sm px-4 py-2"
               >
                 RFP Dashboard
               </Button>
@@ -220,25 +223,78 @@ function SearchGPTContent() {
                   signOut({ callbackUrl: "/" })
                 }}
                 variant="ghost"
-                className="text-red-600 hover:text-red-700"
+                className="text-red-600 hover:text-red-700 text-sm px-4 py-2"
               >
                 Sign Out
               </Button>
             </div>
+
+            {/* Mobile Hamburger Menu */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden p-2 text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+              aria-label="Toggle menu"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                {mobileMenuOpen ? (
+                  <path d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path d="M4 6h16M4 12h16M4 18h16" />
+                )}
+              </svg>
+            </button>
           </div>
+
+          {/* Mobile Dropdown Menu */}
+          {mobileMenuOpen && (
+            <div className="lg:hidden mt-4 py-4 border-t border-gray-200">
+              <div className="flex flex-col space-y-3">
+                <div className="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-50 rounded-lg">
+                  {session.user?.name}
+                </div>
+                <Button
+                  onClick={() => {
+                    router.push("/rfp-dashboard")
+                    setMobileMenuOpen(false)
+                  }}
+                  variant="ghost"
+                  className="justify-start text-sm px-4 py-2"
+                >
+                  RFP Dashboard
+                </Button>
+                <Button
+                  onClick={() => {
+                    signOut({ callbackUrl: "/" })
+                  }}
+                  variant="ghost"
+                  className="justify-start text-red-600 hover:text-red-700 text-sm px-4 py-2"
+                >
+                  Sign Out
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-8 pt-24">
         {/* Search Form */}
         <div className="max-w-4xl mx-auto mb-12">
-          <div className="bg-white rounded-2xl shadow-xl p-8 border border-slate-200">
-            <div className="flex justify-between items-start mb-6">
+          <div className="bg-white rounded-2xl shadow-xl p-4 md:p-8 border border-slate-200">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-start mb-6 gap-4">
               <div>
-                <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
+                <h1 className="text-2xl md:text-4xl font-bold mb-2 bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
                   AI-Powered Supplier Search
                 </h1>
-                <p className="text-slate-600">
+                <p className="text-xs md:text-sm text-slate-600">
                   Search for suppliers using AI-powered web search with government contracts and reviews
                 </p>
               </div>
@@ -247,7 +303,7 @@ function SearchGPTContent() {
                 onClick={handleLoadLastSession}
                 disabled={loadingSession}
                 variant="outline"
-                className="whitespace-nowrap"
+                className="whitespace-nowrap text-sm md:text-base w-full md:w-auto"
               >
                 {loadingSession ? "Loading..." : "Load Last Session"}
               </Button>
@@ -265,9 +321,9 @@ function SearchGPTContent() {
               </div>
             )}
 
-            <form onSubmit={handleSearch} className="space-y-4">
+            <form onSubmit={handleSearch} className="space-y-3 md:space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1 md:mb-2">
                   Product
                 </label>
                 <input
@@ -275,13 +331,13 @@ function SearchGPTContent() {
                   value={product}
                   onChange={(e) => setProduct(e.target.value)}
                   placeholder="e.g., aluminum sheets, industrial valves"
-                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+                  className="w-full px-3 py-2 md:px-4 md:py-3 text-sm md:text-base border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1 md:mb-2">
                   Location
                 </label>
                 <input
@@ -289,14 +345,14 @@ function SearchGPTContent() {
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   placeholder="e.g., Buffalo, New York"
-                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+                  className="w-full px-3 py-2 md:px-4 md:py-3 text-sm md:text-base border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
                   required
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3 md:gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                  <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1 md:mb-2">
                     Min Price ($)
                   </label>
                   <input
@@ -304,11 +360,11 @@ function SearchGPTContent() {
                     value={priceMin}
                     onChange={(e) => setPriceMin(e.target.value)}
                     placeholder="50"
-                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+                    className="w-full px-3 py-2 md:px-4 md:py-3 text-sm md:text-base border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                  <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1 md:mb-2">
                     Max Price ($)
                   </label>
                   <input
@@ -316,7 +372,7 @@ function SearchGPTContent() {
                     value={priceMax}
                     onChange={(e) => setPriceMax(e.target.value)}
                     placeholder="300"
-                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+                    className="w-full px-3 py-2 md:px-4 md:py-3 text-sm md:text-base border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
                   />
                 </div>
               </div>
@@ -329,7 +385,7 @@ function SearchGPTContent() {
                   onChange={(e) => setUseDetailed(e.target.checked)}
                   className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
                 />
-                <label htmlFor="detailed" className="text-sm text-slate-700">
+                <label htmlFor="detailed" className="text-xs md:text-sm text-slate-700">
                   Include contracts & reviews (takes longer)
                 </label>
               </div>
@@ -339,7 +395,7 @@ function SearchGPTContent() {
                 disabled={loading}
                 variant="hero"
                 size="lg"
-                className="w-full hover:shadow-md hover:scale-[1.02] transition-transform"
+                className="w-full text-sm md:text-base hover:shadow-md hover:scale-[1.02] transition-transform"
               >
                 {loading ? "Searching..." : "Search Suppliers"}
               </Button>
@@ -350,21 +406,21 @@ function SearchGPTContent() {
         {/* Results */}
         {suppliers.length > 0 && (
           <div className="max-w-6xl mx-auto">
-            <div className="mb-8 flex justify-between items-center">
-              <h2 className="text-3xl font-bold text-slate-900">
+            <div className="mb-6 md:mb-8 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+              <h2 className="text-xl md:text-3xl font-bold text-slate-900">
                 Found {suppliers.length} {suppliers.length === 1 ? "supplier" : "suppliers"}
               </h2>
 
               {/* Sort Dropdown */}
-              <div className="flex items-center gap-3">
-                <label htmlFor="sort" className="text-sm font-medium text-slate-700">
+              <div className="flex items-center gap-2 md:gap-3">
+                <label htmlFor="sort" className="text-xs md:text-sm font-medium text-slate-700 whitespace-nowrap">
                   Sort by:
                 </label>
                 <select
                   id="sort"
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as "score" | "price" | "contracts")}
-                  className="px-4 py-2 border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors text-sm bg-white"
+                  className="flex-1 md:flex-initial px-3 md:px-4 py-2 border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors text-xs md:text-sm bg-white"
                 >
                   <option value="score">Nexa Score</option>
                   <option value="price">Price (Low to High)</option>
