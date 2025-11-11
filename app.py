@@ -122,8 +122,11 @@ def search_suppliers(product, location, price_min, price_max):
                 print(f"✅ Successfully extracted JSON from markdown code block")
             except Exception as e2:
                 print(f"⚠️ Could not parse JSON from code block: {e2}")
-                suppliers = []
-        else:
+                # Fall through to bracket counting
+                code_block_match = None
+
+        # If code block parsing failed or no code block found, use bracket counting
+        if not code_block_match:
             # Use bracket counting to find the complete JSON array
             try:
                 # Find the opening bracket
