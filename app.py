@@ -95,10 +95,19 @@ def search_suppliers(product, location, price_min, price_max):
     # Debug: print what we got from OpenAI
     print(f"📝 OpenAI Response (first 500 chars): {text[:500]}")
 
+    # Sanitize special characters that might break JSON parsing
+    text_sanitized = text.replace('\u2011', '-')  # non-breaking hyphen
+    text_sanitized = text_sanitized.replace('\u2013', '-')  # en dash
+    text_sanitized = text_sanitized.replace('\u2014', '-')  # em dash
+    text_sanitized = text_sanitized.replace('\u2018', "'")  # left single quote
+    text_sanitized = text_sanitized.replace('\u2019', "'")  # right single quote
+    text_sanitized = text_sanitized.replace('\u201C', '"')  # left double quote
+    text_sanitized = text_sanitized.replace('\u201D', '"')  # right double quote
+
     # Try to extract JSON from the response
     try:
         # First, try to parse the entire response as JSON
-        suppliers = json.loads(text)
+        suppliers = json.loads(text_sanitized)
         print(f"✅ Parsed response as JSON directly")
     except Exception as e:
         print(f"⚠️ Failed to parse as JSON directly: {e}")
@@ -106,7 +115,7 @@ def search_suppliers(product, location, price_min, price_max):
         import re
 
         # Try to find JSON in markdown code blocks (```json ... ```)
-        code_block_match = re.search(r'```(?:json)?\s*(\[.*?\])\s*```', text, re.DOTALL)
+        code_block_match = re.search(r'```(?:json)?\s*(\[.*?\])\s*```', text_sanitized, re.DOTALL)
         if code_block_match:
             try:
                 suppliers = json.loads(code_block_match.group(1))
@@ -115,42 +124,31 @@ def search_suppliers(product, location, price_min, price_max):
                 print(f"⚠️ Could not parse JSON from code block: {e2}")
                 suppliers = []
         else:
-            # Try to find a JSON array, being more careful about the end
-            # Match [ followed by anything until ] followed by optional whitespace/newlines
-            json_match = re.search(r'\[\s*\{.*?\}\s*\]', text, re.DOTALL)
-            if json_match:
-                try:
-                    json_str = json_match.group(0)
-                    suppliers = json.loads(json_str)
-                    print(f"✅ Successfully extracted JSON array from response")
-                except Exception as e3:
-                    print(f"⚠️ Could not parse extracted JSON: {e3}")
-                    # Try to find just the array part, stopping at the first valid closing bracket
-                    try:
-                        # Find the opening bracket
-                        start = text.find('[')
-                        if start != -1:
-                            # Count brackets to find the matching closing bracket
-                            bracket_count = 0
-                            for i, char in enumerate(text[start:], start):
-                                if char == '[':
-                                    bracket_count += 1
-                                elif char == ']':
-                                    bracket_count -= 1
-                                    if bracket_count == 0:
-                                        json_str = text[start:i+1]
-                                        suppliers = json.loads(json_str)
-                                        print(f"✅ Successfully extracted JSON with bracket counting")
-                                        break
-                            else:
-                                suppliers = []
-                        else:
-                            suppliers = []
-                    except Exception as e4:
-                        print(f"⚠️ Final parsing attempt failed: {e4}")
+            # Use bracket counting to find the complete JSON array
+            try:
+                # Find the opening bracket
+                start = text_sanitized.find('[')
+                if start != -1:
+                    # Count brackets to find the matching closing bracket
+                    bracket_count = 0
+                    for i, char in enumerate(text_sanitized[start:], start):
+                        if char == '[':
+                            bracket_count += 1
+                        elif char == ']':
+                            bracket_count -= 1
+                            if bracket_count == 0:
+                                json_str = text_sanitized[start:i+1]
+                                suppliers = json.loads(json_str)
+                                print(f"✅ Successfully extracted JSON with bracket counting")
+                                break
+                    else:
+                        print(f"⚠️ Could not find matching closing bracket")
                         suppliers = []
-            else:
-                print(f"⚠️ No JSON array found in GPT output")
+                else:
+                    print(f"⚠️ No JSON array found in GPT output")
+                    suppliers = []
+            except Exception as e3:
+                print(f"⚠️ Bracket counting parsing failed: {e3}")
                 suppliers = []
 
     # Ensure all suppliers have required fields
