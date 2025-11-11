@@ -115,19 +115,42 @@ def search_suppliers(product, location, price_min, price_max):
                 print(f"⚠️ Could not parse JSON from code block: {e2}")
                 suppliers = []
         else:
-            # Try to find any JSON array in the text
-            json_match = re.search(r'\[.*\]', text, re.DOTALL)
+            # Try to find a JSON array, being more careful about the end
+            # Match [ followed by anything until ] followed by optional whitespace/newlines
+            json_match = re.search(r'\[\s*\{.*?\}\s*\]', text, re.DOTALL)
             if json_match:
                 try:
-                    suppliers = json.loads(json_match.group(0))
+                    json_str = json_match.group(0)
+                    suppliers = json.loads(json_str)
                     print(f"✅ Successfully extracted JSON array from response")
                 except Exception as e3:
                     print(f"⚠️ Could not parse extracted JSON: {e3}")
-                    print(f"📄 Full response text: {text}")
-                    suppliers = []
+                    # Try to find just the array part, stopping at the first valid closing bracket
+                    try:
+                        # Find the opening bracket
+                        start = text.find('[')
+                        if start != -1:
+                            # Count brackets to find the matching closing bracket
+                            bracket_count = 0
+                            for i, char in enumerate(text[start:], start):
+                                if char == '[':
+                                    bracket_count += 1
+                                elif char == ']':
+                                    bracket_count -= 1
+                                    if bracket_count == 0:
+                                        json_str = text[start:i+1]
+                                        suppliers = json.loads(json_str)
+                                        print(f"✅ Successfully extracted JSON with bracket counting")
+                                        break
+                            else:
+                                suppliers = []
+                        else:
+                            suppliers = []
+                    except Exception as e4:
+                        print(f"⚠️ Final parsing attempt failed: {e4}")
+                        suppliers = []
             else:
                 print(f"⚠️ No JSON array found in GPT output")
-                print(f"📄 Full response text: {text}")
                 suppliers = []
 
     # Ensure all suppliers have required fields
