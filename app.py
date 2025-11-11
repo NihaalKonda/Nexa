@@ -99,23 +99,36 @@ def search_suppliers(product, location, price_min, price_max):
     try:
         # First, try to parse the entire response as JSON
         suppliers = json.loads(text)
+        print(f"✅ Parsed response as JSON directly")
     except Exception as e:
         print(f"⚠️ Failed to parse as JSON directly: {e}")
-        # If that fails, try to find JSON within the text (GPT might add explanation text)
+        # If that fails, try to extract from markdown code blocks
         import re
-        json_match = re.search(r'\[.*\]', text, re.DOTALL)
-        if json_match:
+
+        # Try to find JSON in markdown code blocks (```json ... ```)
+        code_block_match = re.search(r'```(?:json)?\s*(\[.*?\])\s*```', text, re.DOTALL)
+        if code_block_match:
             try:
-                suppliers = json.loads(json_match.group(0))
-                print(f"✅ Successfully extracted JSON array from response")
+                suppliers = json.loads(code_block_match.group(1))
+                print(f"✅ Successfully extracted JSON from markdown code block")
             except Exception as e2:
-                print(f"⚠️ Could not parse extracted JSON: {e2}")
-                print(f"📄 Full response text: {text}")
+                print(f"⚠️ Could not parse JSON from code block: {e2}")
                 suppliers = []
         else:
-            print(f"⚠️ No JSON array found in GPT output")
-            print(f"📄 Full response text: {text}")
-            suppliers = []
+            # Try to find any JSON array in the text
+            json_match = re.search(r'\[.*\]', text, re.DOTALL)
+            if json_match:
+                try:
+                    suppliers = json.loads(json_match.group(0))
+                    print(f"✅ Successfully extracted JSON array from response")
+                except Exception as e3:
+                    print(f"⚠️ Could not parse extracted JSON: {e3}")
+                    print(f"📄 Full response text: {text}")
+                    suppliers = []
+            else:
+                print(f"⚠️ No JSON array found in GPT output")
+                print(f"📄 Full response text: {text}")
+                suppliers = []
 
     # Ensure all suppliers have required fields
     formatted_suppliers = []
