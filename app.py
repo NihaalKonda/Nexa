@@ -279,49 +279,38 @@ def cosine_similarity(vec1, vec2):
 
 
 def calculate_location_similarity(supplier_location, target_location):
-    """Calculate location proximity score (0-1) using geodesic distance"""
+    """Calculate location proximity score (0-1) using string matching (geocoding disabled for performance)"""
     if not supplier_location or supplier_location == "N/A":
         return 0.3  # Default score for missing location
 
-    try:
-        # Geocode both locations
-        location1 = geolocator.geocode(supplier_location, timeout=5)
-        location2 = geolocator.geocode(target_location, timeout=5)
+    # Simple string matching for location scoring
+    # This avoids slow/unreliable geocoding API calls
+    supplier_lower = supplier_location.lower()
+    target_lower = target_location.lower()
 
-        if not location1 or not location2:
-            # Fallback to string matching if geocoding fails
-            if supplier_location.lower() == target_location.lower():
-                return 1.0
-            return 0.3
+    # Exact match
+    if supplier_lower == target_lower:
+        return 1.0
 
-        # Get coordinates
-        coords1 = (location1.latitude, location1.longitude)
-        coords2 = (location2.latitude, location2.longitude)
+    # Check if same city
+    supplier_parts = [p.strip() for p in supplier_lower.split(',')]
+    target_parts = [p.strip() for p in target_lower.split(',')]
 
-        # Calculate distance in kilometers
-        distance_km = geodesic(coords1, coords2).km
+    if supplier_parts and target_parts:
+        # Same city name
+        if supplier_parts[0] == target_parts[0]:
+            return 0.9
+        # Same state (last part usually)
+        if len(supplier_parts) > 1 and len(target_parts) > 1:
+            if supplier_parts[-1] == target_parts[-1]:
+                return 0.6
 
-        # Score based on distance (closer = better)
-        # 0 km = 1.0, 50 km = 0.8, 100 km = 0.6, 200 km = 0.4, 500+ km = 0.1
-        if distance_km == 0:
-            return 1.0
-        elif distance_km < 50:
-            return 1.0 - (distance_km / 50) * 0.2
-        elif distance_km < 100:
-            return 0.8 - ((distance_km - 50) / 50) * 0.2
-        elif distance_km < 200:
-            return 0.6 - ((distance_km - 100) / 100) * 0.2
-        elif distance_km < 500:
-            return 0.4 - ((distance_km - 200) / 300) * 0.3
-        else:
-            return 0.1
+    # Check if target is mentioned anywhere in supplier location
+    if target_parts[0] in supplier_lower:
+        return 0.7
 
-    except Exception as e:
-        print(f"Geocoding error: {e}")
-        # Fallback to string matching
-        if supplier_location.lower() == target_location.lower():
-            return 1.0
-        return 0.3
+    # Default: different location
+    return 0.3
 
 
 def calculate_keyword_similarity(description, product_title, search_product):
