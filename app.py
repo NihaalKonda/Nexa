@@ -88,11 +88,14 @@ def search_suppliers(product, location, price_min, price_max):
     ]
     """
 
-    response = client.responses.create(
-        model="gpt-4o",
-        tools=[{"type": "web_search"}],
-        input=query
-    )
+    try:
+        response = client.responses.create(
+            model="gpt-5",
+            tools=[{"type": "web_search"}],
+            input=query
+        )
+    except Exception as e:
+        return f"Error fetching suppliers: {e}"
 
     text = response.output_text
 
@@ -251,7 +254,7 @@ def fetch_web_reviews(company_name, location):
     """
     try:
         response = client.responses.create(
-            model="gpt-4o",
+            model="gpt-5",
             tools=[{"type": "web_search"}],
             input=query
         )
@@ -731,7 +734,7 @@ def api_get_reviews():
 @app.route('/api/rfp/generate', methods=['POST'])
 def api_generate_rfp():
     """
-    Generate RFP using GPT-4 with Jinja2 templates and export as PDF.
+    Generate RFP using GPT-5 with Jinja2 templates and export as PDF.
 
     Request body:
     {
