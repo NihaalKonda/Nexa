@@ -69,14 +69,17 @@ def search_suppliers(product, location, price_min, price_max):
     - contact: Email or phone number
     - description: Short description of the supplier or product focus
 
-    Return a valid JSON list:
+    IMPORTANT: Return ONLY a valid JSON array with no additional text, explanations, or markdown code blocks.
+    Use only standard ASCII quotes (") and hyphens (-), no special Unicode characters.
+
+    JSON format:
     [
       {{
         "name": "Supplier Name",
         "location": "City, State",
         "product_title": "Specific product name",
         "units_sold": "Unit of sale or quantity available",
-        "price_range": "$X - $Y per [unit]",
+        "price_range": "$X - $Y per unit",
         "website": "https://example.com",
         "contact": "email or phone",
         "description": "short summary"
@@ -96,13 +99,28 @@ def search_suppliers(product, location, price_min, price_max):
     print(f"📝 OpenAI Response (first 500 chars): {text[:500]}")
 
     # Sanitize special characters that might break JSON parsing
-    text_sanitized = text.replace('\u2011', '-')  # non-breaking hyphen
-    text_sanitized = text_sanitized.replace('\u2013', '-')  # en dash
-    text_sanitized = text_sanitized.replace('\u2014', '-')  # em dash
-    text_sanitized = text_sanitized.replace('\u2018', "'")  # left single quote
-    text_sanitized = text_sanitized.replace('\u2019', "'")  # right single quote
-    text_sanitized = text_sanitized.replace('\u201C', '"')  # left double quote
-    text_sanitized = text_sanitized.replace('\u201D', '"')  # right double quote
+    def sanitize_for_json(s):
+        """Aggressively sanitize text for JSON parsing"""
+        # Replace various Unicode dashes and hyphens
+        s = s.replace('\u2011', '-')  # non-breaking hyphen
+        s = s.replace('\u2013', '-')  # en dash
+        s = s.replace('\u2014', '-')  # em dash
+        s = s.replace('\u2212', '-')  # minus sign
+        # Replace various Unicode quotes
+        s = s.replace('\u2018', "'")  # left single quote
+        s = s.replace('\u2019', "'")  # right single quote
+        s = s.replace('\u201A', "'")  # single low-9 quote
+        s = s.replace('\u201B', "'")  # single high-reversed-9 quote
+        s = s.replace('\u201C', '"')  # left double quote
+        s = s.replace('\u201D', '"')  # right double quote
+        s = s.replace('\u201E', '"')  # double low-9 quote
+        s = s.replace('\u201F', '"')  # double high-reversed-9 quote
+        # Replace other problematic characters
+        s = s.replace('\u00A0', ' ')  # non-breaking space
+        s = s.replace('\u2026', '...')  # ellipsis
+        return s
+
+    text_sanitized = sanitize_for_json(text)
 
     # Try to extract JSON from the response
     try:
@@ -141,8 +159,17 @@ def search_suppliers(product, location, price_min, price_max):
                             bracket_count -= 1
                             if bracket_count == 0:
                                 json_str = text_sanitized[start:i+1]
-                                suppliers = json.loads(json_str)
-                                print(f"✅ Successfully extracted JSON with bracket counting")
+                                try:
+                                    suppliers = json.loads(json_str)
+                                    print(f"✅ Successfully extracted JSON with bracket counting")
+                                except json.JSONDecodeError as je:
+                                    # Print the area around the error for debugging
+                                    error_pos = je.pos
+                                    start_debug = max(0, error_pos - 100)
+                                    end_debug = min(len(json_str), error_pos + 100)
+                                    print(f"⚠️ JSON error at position {error_pos}:")
+                                    print(f"Context: ...{json_str[start_debug:end_debug]}...")
+                                    raise
                                 break
                     else:
                         print(f"⚠️ Could not find matching closing bracket")
