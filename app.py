@@ -69,10 +69,10 @@ def search_suppliers(product, location, price_min, price_max):
     - contact: Email or phone number
     - description: Short description of the supplier or product focus
 
-    IMPORTANT: Return ONLY a valid JSON array with no additional text, explanations, or markdown code blocks.
-    Use only standard ASCII quotes (") and hyphens (-), no special Unicode characters.
+    Return your results as a JSON array. You may include a brief explanation before the JSON if needed.
+    Use standard ASCII quotes (") and hyphens (-) in the JSON.
 
-    JSON format:
+    Example format:
     [
       {{
         "name": "Supplier Name",
