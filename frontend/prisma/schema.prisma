@@ -56,11 +56,15 @@ model Company {
 model Supplier {
   id                  String    @id @default(cuid())
   name                String
+  slug                String    @unique // URL-friendly version (e.g., "acme-corp" for profile URLs)
+  contactEmail        String?   @unique
+  password            String?   // Hashed password for supplier login
+  industry            String?
   website             String?
-  contactEmail        String?
   contactPhone        String?
   address             String?
   city                String?
+  state               String?
   country             String?
   certificationsJson  Json?     @db.JsonB  // ISO, CE, etc.
   rating              Float?    @default(0)
@@ -71,6 +75,8 @@ model Supplier {
   updatedAt           DateTime  @updatedAt
 
   @@index([name])
+  @@index([contactEmail])
+  @@index([slug])
   @@index([country])
   @@index([verified])
 }
