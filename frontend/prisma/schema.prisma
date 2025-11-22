@@ -57,8 +57,8 @@ model Supplier {
   id                  String    @id @default(cuid())
   name                String
   slug                String    @unique // URL-friendly version (e.g., "acme-corp" for profile URLs)
-  contactEmail        String?   @unique
-  password            String?   // Hashed password for supplier login
+  contactEmail        String    @unique // Required for authentication
+  password            String    // Hashed password for supplier login (required)
   industry            String?
   website             String?
   contactPhone        String?

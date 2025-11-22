@@ -25,20 +25,28 @@ function SearchGPTContent() {
   const [sortBy, setSortBy] = useState<"score" | "price" | "contracts">("score")
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-  // Redirect to signin if not authenticated
+  // Redirect to signin if not authenticated or redirect suppliers to their profile
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/auth/signin")
+    } else if (status === "authenticated") {
+      const user = session?.user as any
+      if (user?.role === "supplier") {
+        router.push("/supplier/profile")
+      }
     }
-  }, [status, router])
+  }, [status, session, router])
 
   // Auto-load session if loadSession query parameter is present
   useEffect(() => {
     const shouldLoadSession = searchParams.get("loadSession")
     if (shouldLoadSession === "true" && status === "authenticated") {
-      handleLoadLastSession()
+      const user = session?.user as any
+      if (user?.role !== "supplier") {
+        handleLoadLastSession()
+      }
     }
-  }, [searchParams, status])
+  }, [searchParams, status, session])
 
   // Function to load last session
   const handleLoadLastSession = async () => {
@@ -105,8 +113,8 @@ function SearchGPTContent() {
     }
   }
 
-  // Show loading while checking auth
-  if (status === "loading") {
+  // Show loading while checking auth or if supplier is being redirected
+  if (status === "loading" || (status === "authenticated" && (session?.user as any)?.role === "supplier")) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
         <div className="text-center">

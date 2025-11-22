@@ -24,12 +24,17 @@ export default function RFPDashboard() {
   const [error, setError] = useState("")
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-  // Redirect to signin if not authenticated
+  // Redirect to signin if not authenticated or redirect suppliers to their profile
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/auth/signin")
+    } else if (status === "authenticated") {
+      const user = session?.user as any
+      if (user?.role === "supplier") {
+        router.push("/supplier/profile")
+      }
     }
-  }, [status, router])
+  }, [status, session, router])
 
   // Fetch RFPs
   useEffect(() => {

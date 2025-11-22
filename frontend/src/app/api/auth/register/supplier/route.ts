@@ -4,12 +4,12 @@ import bcrypt from "bcryptjs"
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, password, industry, city, state, country } = await req.json()
+    const { name, email, password, industry, website, phone, description, city, state, country, products } = await req.json()
 
     // Validation
-    if (!name || !email || !password) {
+    if (!name || !email || !password || !industry || !website || !phone || !description || !city || !state || !country) {
       return NextResponse.json(
-        { error: "Name, email, and password are required" },
+        { error: "All fields are required" },
         { status: 400 }
       )
     }
@@ -50,17 +50,29 @@ export async function POST(req: NextRequest) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12)
 
-    // Create supplier
+    // Create supplier with products
     const supplier = await prisma.supplier.create({
       data: {
         name,
         slug,
         contactEmail: email,
         password: hashedPassword,
-        industry: industry || null,
-        city: city || null,
-        state: state || null,
-        country: country || null,
+        industry,
+        website,
+        contactPhone: phone,
+        description,
+        city,
+        state,
+        country,
+        products: products && products.length > 0 ? {
+          create: products.map((p: any) => ({
+            name: p.name,
+            sku: p.sku || null,
+            priceText: p.priceText,
+            unit: p.unit,
+            description: p.description || null,
+          }))
+        } : undefined,
       },
       select: {
         id: true,
@@ -68,9 +80,13 @@ export async function POST(req: NextRequest) {
         contactEmail: true,
         slug: true,
         industry: true,
+        website: true,
+        contactPhone: true,
+        description: true,
         city: true,
         state: true,
         country: true,
+        products: true,
         createdAt: true,
       },
     })
