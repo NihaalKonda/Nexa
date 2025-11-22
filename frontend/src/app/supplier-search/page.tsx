@@ -216,7 +216,18 @@ function SearchGPTContent() {
 
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center gap-6">
-              <span className="text-base font-medium text-slate-700">{session.user?.name}</span>
+              <Link href="/buyer/profile" className="text-base font-medium text-slate-700 hover:text-blue-600 transition-colors cursor-pointer">
+                {session.user?.name}
+              </Link>
+              <Button
+                onClick={() => {
+                  router.push("/supplier-search")
+                }}
+                variant="ghost"
+                className="text-sm px-4 py-2"
+              >
+                Supplier Search
+              </Button>
               <Button
                 onClick={() => {
                   router.push("/rfp-dashboard")
@@ -268,6 +279,16 @@ function SearchGPTContent() {
                 <div className="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-50 rounded-lg">
                   {session.user?.name}
                 </div>
+                <Button
+                  onClick={() => {
+                    router.push("/supplier-search")
+                    setMobileMenuOpen(false)
+                  }}
+                  variant="ghost"
+                  className="justify-start text-sm px-4 py-2"
+                >
+                  Supplier Search
+                </Button>
                 <Button
                   onClick={() => {
                     router.push("/rfp-dashboard")

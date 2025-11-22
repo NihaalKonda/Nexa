@@ -114,7 +114,9 @@ export default function RFPDashboard() {
 
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center gap-6">
-              <span className="text-base font-medium text-slate-700">{session.user?.name}</span>
+              <Link href="/buyer/profile" className="text-base font-medium text-slate-700 hover:text-blue-600 transition-colors cursor-pointer">
+                {session.user?.name}
+              </Link>
               <Button
                 onClick={() => {
                   router.push("/supplier-search")
@@ -123,6 +125,15 @@ export default function RFPDashboard() {
                 className="text-sm px-4 py-2"
               >
                 Supplier Search
+              </Button>
+              <Button
+                onClick={() => {
+                  router.push("/rfp-dashboard")
+                }}
+                variant="ghost"
+                className="text-sm px-4 py-2"
+              >
+                RFP Dashboard
               </Button>
               <Button
                 onClick={() => {
@@ -175,6 +186,16 @@ export default function RFPDashboard() {
                   className="justify-start text-sm px-4 py-2"
                 >
                   Supplier Search
+                </Button>
+                <Button
+                  onClick={() => {
+                    router.push("/rfp-dashboard")
+                    setMobileMenuOpen(false)
+                  }}
+                  variant="ghost"
+                  className="justify-start text-sm px-4 py-2"
+                >
+                  RFP Dashboard
                 </Button>
                 <Button
                   onClick={() => {

@@ -285,7 +285,9 @@ function GenerateRFPContent() {
 
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center gap-6">
-              <span className="text-base font-medium text-slate-700">{session.user?.name}</span>
+              <Link href="/buyer/profile" className="text-base font-medium text-slate-700 hover:text-blue-600 transition-colors cursor-pointer">
+                {session.user?.name}
+              </Link>
               <Button
                 onClick={() => {
                   router.push("/supplier-search")

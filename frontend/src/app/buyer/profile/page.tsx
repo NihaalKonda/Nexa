@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import Image from "next/image"
 
-export default function SupplierProfile() {
+export default function BuyerProfile() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const [error, setError] = useState("")
@@ -18,55 +18,47 @@ export default function SupplierProfile() {
   // Form state
   const [formData, setFormData] = useState({
     name: "",
-    contactEmail: "",
+    email: "",
     industry: "",
-    website: "",
-    contactPhone: "",
-    description: "",
-    address: "",
     city: "",
     state: "",
     country: "",
   })
 
-  // Redirect if not authenticated or not a supplier
+  // Redirect if not authenticated or not a buyer
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/auth/signin")
-    } else if (status === "authenticated" && (session?.user as any)?.role !== "supplier") {
-      router.push("/supplier-search")
+    } else if (status === "authenticated" && (session?.user as any)?.role !== "buyer") {
+      router.push("/supplier/profile")
     }
   }, [status, session, router])
 
-  // Load supplier data from database
+  // Load buyer data from database
   useEffect(() => {
-    const fetchSupplierData = async () => {
+    const fetchBuyerData = async () => {
       if (status === "authenticated") {
         try {
-          const response = await fetch("/api/supplier/profile")
+          const response = await fetch("/api/buyer/profile")
           if (response.ok) {
             const data = await response.json()
-            const supplier = data.supplier
+            const company = data.company
             setFormData({
-              name: supplier.name || "",
-              contactEmail: supplier.contactEmail || "",
-              industry: supplier.industry || "",
-              website: supplier.website || "",
-              contactPhone: supplier.contactPhone || "",
-              description: supplier.description || "",
-              address: supplier.address || "",
-              city: supplier.city || "",
-              state: supplier.state || "",
-              country: supplier.country || "",
+              name: company.name || "",
+              email: company.email || "",
+              industry: company.industry || "",
+              city: company.city || "",
+              state: company.state || "",
+              country: company.country || "",
             })
           }
         } catch (err) {
-          console.error("Error loading supplier data:", err)
+          console.error("Error loading buyer data:", err)
         }
       }
     }
 
-    fetchSupplierData()
+    fetchBuyerData()
   }, [status])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -83,7 +75,7 @@ export default function SupplierProfile() {
     try {
       console.log("Submitting form data:", formData)
 
-      const response = await fetch("/api/supplier/profile", {
+      const response = await fetch("/api/buyer/profile", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -128,7 +120,7 @@ export default function SupplierProfile() {
       <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100">
         <div className="container mx-auto px-3 md:px-6 py-3 md:py-4">
           <div className="flex items-center justify-between">
-            <Link href="/supplier/profile" className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
+            <Link href="/supplier-search" className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
               <Image
                 src="/nexa_logo.png"
                 alt="Nexa Logo"
@@ -143,12 +135,16 @@ export default function SupplierProfile() {
 
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center gap-6">
-              <Link href="/supplier/profile" className="text-base font-medium text-slate-700 hover:text-blue-600 transition-colors cursor-pointer">
+              <Link href="/buyer/profile" className="text-base font-medium text-slate-700 hover:text-blue-600 transition-colors cursor-pointer">
                 {session?.user?.name}
               </Link>
-              <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
-                Supplier
-              </span>
+              <Button
+                onClick={() => router.push("/rfp-dashboard")}
+                variant="ghost"
+                className="text-sm px-4 py-2"
+              >
+                RFP Dashboard
+              </Button>
               <Button
                 onClick={() => signOut({ callbackUrl: "/" })}
                 variant="ghost"
@@ -188,10 +184,14 @@ export default function SupplierProfile() {
               <div className="flex flex-col space-y-3">
                 <div className="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-50 rounded-lg">
                   {session?.user?.name}
-                  <span className="ml-2 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">
-                    Supplier
-                  </span>
                 </div>
+                <Button
+                  onClick={() => router.push("/rfp-dashboard")}
+                  variant="ghost"
+                  className="justify-start text-sm px-4 py-2"
+                >
+                  RFP Dashboard
+                </Button>
                 <Button
                   onClick={() => signOut({ callbackUrl: "/" })}
                   variant="ghost"
@@ -211,10 +211,10 @@ export default function SupplierProfile() {
           <div className="bg-white rounded-2xl shadow-xl p-4 md:p-8 border border-slate-200">
             <div className="mb-8">
               <h1 className="text-2xl md:text-4xl font-bold mb-2 bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
-                Supplier Profile
+                Company Profile
               </h1>
               <p className="text-slate-600 mt-2">
-                Manage your company information and details that buyers will see.
+                Manage your company information and preferences.
               </p>
             </div>
 
@@ -247,16 +247,16 @@ export default function SupplierProfile() {
               />
             </div>
 
-            {/* Contact Email */}
+            {/* Email */}
             <div>
-              <label htmlFor="contactEmail" className="block text-xs md:text-sm font-medium text-slate-700 mb-1 md:mb-2">
-                Contact Email *
+              <label htmlFor="email" className="block text-xs md:text-sm font-medium text-slate-700 mb-1 md:mb-2">
+                Email *
               </label>
               <input
                 type="email"
-                id="contactEmail"
-                name="contactEmail"
-                value={formData.contactEmail}
+                id="email"
+                name="email"
+                value={formData.email}
                 onChange={handleInputChange}
                 required
                 className="w-full px-3 py-2 md:px-4 md:py-3 text-sm md:text-base border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
@@ -276,57 +276,6 @@ export default function SupplierProfile() {
                 onChange={handleInputChange}
                 required
                 placeholder="e.g., Manufacturing, Technology, Healthcare"
-                className="w-full px-3 py-2 md:px-4 md:py-3 text-sm md:text-base border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
-              />
-            </div>
-
-            {/* Website */}
-            <div>
-              <label htmlFor="website" className="block text-xs md:text-sm font-medium text-slate-700 mb-1 md:mb-2">
-                Website *
-              </label>
-              <input
-                type="url"
-                id="website"
-                name="website"
-                value={formData.website}
-                onChange={handleInputChange}
-                required
-                placeholder="https://example.com"
-                className="w-full px-3 py-2 md:px-4 md:py-3 text-sm md:text-base border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
-              />
-            </div>
-
-            {/* Contact Phone */}
-            <div>
-              <label htmlFor="contactPhone" className="block text-xs md:text-sm font-medium text-slate-700 mb-1 md:mb-2">
-                Contact Phone *
-              </label>
-              <input
-                type="tel"
-                id="contactPhone"
-                name="contactPhone"
-                value={formData.contactPhone}
-                onChange={handleInputChange}
-                required
-                placeholder="+1 (555) 123-4567"
-                className="w-full px-3 py-2 md:px-4 md:py-3 text-sm md:text-base border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
-              />
-            </div>
-
-            {/* Description */}
-            <div>
-              <label htmlFor="description" className="block text-xs md:text-sm font-medium text-slate-700 mb-1 md:mb-2">
-                Company Description *
-              </label>
-              <textarea
-                id="description"
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                required
-                rows={4}
-                placeholder="Tell buyers about your company, products, and services..."
                 className="w-full px-3 py-2 md:px-4 md:py-3 text-sm md:text-base border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
               />
             </div>
@@ -384,7 +333,7 @@ export default function SupplierProfile() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => router.push("/")}
+                onClick={() => router.push("/supplier-search")}
                 className="w-full md:w-auto text-sm md:text-base"
               >
                 Cancel
