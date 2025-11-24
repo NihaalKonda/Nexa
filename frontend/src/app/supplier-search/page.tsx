@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
-import { searchSuppliers, searchSuppliersDetailed, type Supplier } from "@/lib/api"
+import { searchSuppliersCombined, type Supplier } from "@/lib/api"
 
 function SearchGPTContent() {
   const { data: session, status } = useSession()
@@ -175,11 +175,10 @@ function SearchGPTContent() {
         location,
         price_min: parseFloat(priceMin) || 0,
         price_max: parseFloat(priceMax) || 10000,
+        useDetailed,
       }
 
-      const response = useDetailed
-        ? await searchSuppliersDetailed(params)
-        : await searchSuppliers(params)
+      const response = await searchSuppliersCombined(params)
 
       if (response.success) {
         setSuppliers(response.suppliers)
@@ -470,9 +469,16 @@ function SearchGPTContent() {
                     {/* Header */}
                     <div className="flex justify-between items-start mb-4">
                       <div className="flex-1">
-                        <h3 className="text-xl font-bold text-slate-900 mb-1">
-                          {supplier.name}
-                        </h3>
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="text-xl font-bold text-slate-900">
+                            {supplier.name}
+                          </h3>
+                          {supplier.source === "internal" && (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 border border-green-300">
+                              ✓ Registered Supplier
+                            </span>
+                          )}
+                        </div>
                         <p className="text-slate-600 text-sm">{supplier.location}</p>
                       </div>
                       <div className="text-right ml-4">

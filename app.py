@@ -520,7 +520,7 @@ def rank_suppliers(suppliers, search_product, search_location, price_min, price_
             scores['price'] * 30 +
             scores['location'] * 25 +
             scores['keywords'] * 20 +
-            scores['contracts'] * 15 +
+            scores['contracts'] * 10 +
             scores['reviews'] * 10
         )
 
@@ -530,7 +530,7 @@ def rank_suppliers(suppliers, search_product, search_location, price_min, price_
             'price': round(scores['price'] * 30, 1),
             'location': round(scores['location'] * 25, 1),
             'keywords': round(scores['keywords'] * 20, 1),
-            'contracts': round(scores['contracts'] * 15, 1),
+            'contracts': round(scores['contracts'] * 10, 1),
             'reviews': round(scores['reviews'] * 10, 1)
         }
 
@@ -599,6 +599,52 @@ def get_suppliers_with_contracts_and_reviews(product, location, price_min, price
 def health_check():
     """Health check endpoint"""
     return jsonify({"status": "healthy", "message": "Backend API is running"})
+
+
+@app.route('/api/rank', methods=['POST'])
+def api_rank_suppliers():
+    """
+    Rank suppliers using the sophisticated scoring algorithm.
+
+    Request body:
+    {
+        "suppliers": [...],  // List of supplier objects
+        "search_product": "steel bolts",
+        "search_location": "Ithaca, NY",
+        "price_min": 10,
+        "price_max": 50
+    }
+
+    Returns: Ranked suppliers with scores
+    """
+    try:
+        data = request.json
+        suppliers = data.get('suppliers', [])
+        search_product = data.get('search_product', '')
+        search_location = data.get('search_location', '')
+        price_min = data.get('price_min', 0)
+        price_max = data.get('price_max', 10000)
+
+        if not suppliers:
+            return jsonify({"error": "No suppliers provided"}), 400
+
+        # Use the existing rank_suppliers function
+        ranked_suppliers = rank_suppliers(
+            suppliers,
+            search_product,
+            search_location,
+            price_min,
+            price_max
+        )
+
+        return jsonify({
+            "success": True,
+            "suppliers": ranked_suppliers
+        })
+
+    except Exception as e:
+        print(f"Error in rank endpoint: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route('/api/search', methods=['POST'])
