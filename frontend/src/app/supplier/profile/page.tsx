@@ -146,22 +146,13 @@ export default function SupplierProfile() {
               <Link href="/supplier/profile" className="text-base font-medium text-slate-700 hover:text-blue-600 transition-colors cursor-pointer">
                 {session?.user?.name}
               </Link>
-              <div className="flex items-center gap-0">
-                <Button
-                  onClick={() => router.push("/supplier/profile")}
-                  variant="ghost"
-                  className="text-sm px-4 py-2"
-                >
-                  Profile
-                </Button>
-                <Button
-                  onClick={() => router.push("/supplier/products")}
-                  variant="ghost"
-                  className="text-sm px-4 py-2"
-                >
-                  Products
-                </Button>
-              </div>
+              <Button
+                onClick={() => router.push("/supplier/products")}
+                variant="ghost"
+                className="text-sm px-4 py-2"
+              >
+                Products
+              </Button>
               <Button
                 onClick={() => signOut({ callbackUrl: "/" })}
                 variant="ghost"
@@ -202,16 +193,6 @@ export default function SupplierProfile() {
                 <div className="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-50 rounded-lg">
                   {session?.user?.name}
                 </div>
-                <Button
-                  onClick={() => {
-                    router.push("/supplier/profile")
-                    setMobileMenuOpen(false)
-                  }}
-                  variant="ghost"
-                  className="justify-start text-sm px-4 py-2"
-                >
-                  Profile
-                </Button>
                 <Button
                   onClick={() => {
                     router.push("/supplier/products")

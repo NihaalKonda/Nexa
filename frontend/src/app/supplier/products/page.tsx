@@ -33,6 +33,7 @@ export default function SupplierProducts() {
   const [products, setProducts] = useState<EditableProduct[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
+  const [successMessage, setSuccessMessage] = useState("")
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   // Redirect if not authenticated or not a supplier
@@ -101,7 +102,8 @@ export default function SupplierProducts() {
 
     // Validate required fields
     if (!product.name || !product.unit || !product.priceText) {
-      alert("Please fill in all required fields (Name, Unit, Price)")
+      setError("Please fill in all required fields (Name, Unit, Price)")
+      setSuccessMessage("")
       return
     }
 
@@ -141,20 +143,27 @@ export default function SupplierProducts() {
           setProducts(products.map(p =>
             p.id === productId ? { ...data.product, isSaving: false, isNew: false } : p
           ))
+          setSuccessMessage("Product added successfully!")
         } else {
           setProducts(products.map(p =>
             p.id === productId ? { ...p, isSaving: false } : p
           ))
+          setSuccessMessage("Product saved successfully!")
         }
+        setError("")
+        // Clear success message after 3 seconds
+        setTimeout(() => setSuccessMessage(""), 3000)
       } else {
-        alert(data.error || "Failed to save product")
+        setError(data.error || "Failed to save product")
+        setSuccessMessage("")
         setProducts(products.map(p =>
           p.id === productId ? { ...p, isSaving: false } : p
         ))
       }
     } catch (err) {
       console.error("Error saving product:", err)
-      alert("Failed to save product")
+      setError("Failed to save product")
+      setSuccessMessage("")
       setProducts(products.map(p =>
         p.id === productId ? { ...p, isSaving: false } : p
       ))
@@ -167,6 +176,9 @@ export default function SupplierProducts() {
     // If it's a new product that hasn't been saved yet, just remove it from the list
     if (product?.isNew) {
       setProducts(products.filter(p => p.id !== productId))
+      setSuccessMessage("Product removed successfully!")
+      setError("")
+      setTimeout(() => setSuccessMessage(""), 3000)
       return
     }
 
@@ -177,13 +189,18 @@ export default function SupplierProducts() {
 
       if (response.ok) {
         setProducts(products.filter(p => p.id !== productId))
+        setSuccessMessage("Product removed successfully!")
+        setError("")
+        setTimeout(() => setSuccessMessage(""), 3000)
       } else {
         const data = await response.json()
-        alert(data.error || "Failed to delete product")
+        setError(data.error || "Failed to delete product")
+        setSuccessMessage("")
       }
     } catch (err) {
       console.error("Error deleting product:", err)
-      alert("Failed to delete product")
+      setError("Failed to delete product")
+      setSuccessMessage("")
     }
   }
 
@@ -222,22 +239,13 @@ export default function SupplierProducts() {
               <Link href="/supplier/profile" className="text-base font-medium text-slate-700 hover:text-blue-600 transition-colors cursor-pointer">
                 {session?.user?.name}
               </Link>
-              <div className="flex items-center gap-0">
-                <Button
-                  onClick={() => router.push("/supplier/profile")}
-                  variant="ghost"
-                  className="text-sm px-4 py-2"
-                >
-                  Profile
-                </Button>
-                <Button
-                  onClick={() => router.push("/supplier/products")}
-                  variant="ghost"
-                  className="text-sm px-4 py-2"
-                >
-                  Products
-                </Button>
-              </div>
+              <Button
+                onClick={() => router.push("/supplier/products")}
+                variant="ghost"
+                className="text-sm px-4 py-2"
+              >
+                Products
+              </Button>
               <Button
                 onClick={() => signOut({ callbackUrl: "/" })}
                 variant="ghost"
@@ -280,16 +288,6 @@ export default function SupplierProducts() {
                 </div>
                 <Button
                   onClick={() => {
-                    router.push("/supplier/profile")
-                    setMobileMenuOpen(false)
-                  }}
-                  variant="ghost"
-                  className="justify-start text-sm px-4 py-2"
-                >
-                  Profile
-                </Button>
-                <Button
-                  onClick={() => {
                     router.push("/supplier/products")
                     setMobileMenuOpen(false)
                   }}
@@ -327,6 +325,12 @@ export default function SupplierProducts() {
             {error && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
                 <p className="text-red-800 text-sm">{error}</p>
+              </div>
+            )}
+
+            {successMessage && (
+              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                <p className="text-green-800 text-sm">{successMessage}</p>
               </div>
             )}
 

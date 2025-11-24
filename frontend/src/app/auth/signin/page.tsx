@@ -38,7 +38,16 @@ function SignInForm() {
       }
 
       if (result?.ok) {
-        router.push("/supplier-search")
+        // Fetch session to check user role
+        const response = await fetch("/api/auth/session")
+        const session = await response.json()
+
+        // Redirect based on role
+        if (session?.user?.role === "supplier") {
+          router.push("/supplier/products")
+        } else {
+          router.push("/supplier-search")
+        }
         router.refresh()
       }
     } catch (err) {
