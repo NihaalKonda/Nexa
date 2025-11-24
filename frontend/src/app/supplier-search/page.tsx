@@ -28,11 +28,11 @@ function SearchGPTContent() {
   // Redirect to signin if not authenticated or redirect suppliers to their profile
   useEffect(() => {
     if (status === "unauthenticated") {
-      router.push("/auth/signin")
+      router.replace("/auth/signin")
     } else if (status === "authenticated") {
       const user = session?.user as any
       if (user?.role === "supplier") {
-        router.push("/supplier/profile")
+        router.replace("/supplier/profile")
       }
     }
   }, [status, session, router])
