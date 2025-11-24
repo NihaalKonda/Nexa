@@ -11,17 +11,25 @@ import CTA from "@/components/landing/CTA"
 import Footer from "@/components/landing/Footer"
 
 export default function Home() {
-  const { status } = useSession()
+  const { data: session, status } = useSession()
   const router = useRouter()
 
   useEffect(() => {
-    if (status === "authenticated") {
-      router.push("/supplier-search")
+    if (status === "authenticated" && session?.user) {
+      const user = session.user as any
+      // Only redirect once we have role information
+      if (user.role) {
+        if (user.role === "supplier") {
+          router.push("/supplier/profile")
+        } else if (user.role === "buyer") {
+          router.push("/supplier-search")
+        }
+      }
     }
-  }, [status, router])
+  }, [status, session, router])
 
-  // Show loading while checking auth
-  if (status === "loading") {
+  // Show loading while checking auth or redirecting
+  if (status === "loading" || status === "authenticated") {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
         <div className="text-center">
@@ -33,20 +41,16 @@ export default function Home() {
   }
 
   // Show landing page if not authenticated
-  if (status === "unauthenticated") {
-    return (
-      <div className="min-h-screen">
-        <LandingNav />
-        <main>
-          <Hero />
-          <Features />
-          <Benefits />
-          <CTA />
-        </main>
-        <Footer />
-      </div>
-    )
-  }
-
-  return null
+  return (
+    <div className="min-h-screen">
+      <LandingNav />
+      <main>
+        <Hero />
+        <Features />
+        <Benefits />
+        <CTA />
+      </main>
+      <Footer />
+    </div>
+  )
 }

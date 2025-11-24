@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
-import { searchSuppliers, searchSuppliersDetailed, type Supplier } from "@/lib/api"
+import { searchSuppliersCombined, type Supplier } from "@/lib/api"
 
 function SearchGPTContent() {
   const { data: session, status } = useSession()
@@ -25,20 +25,28 @@ function SearchGPTContent() {
   const [sortBy, setSortBy] = useState<"score" | "price" | "contracts">("score")
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-  // Redirect to signin if not authenticated
+  // Redirect to signin if not authenticated or redirect suppliers to their profile
   useEffect(() => {
     if (status === "unauthenticated") {
-      router.push("/auth/signin")
+      router.replace("/auth/signin")
+    } else if (status === "authenticated") {
+      const user = session?.user as any
+      if (user?.role === "supplier") {
+        router.replace("/supplier/profile")
+      }
     }
-  }, [status, router])
+  }, [status, session, router])
 
   // Auto-load session if loadSession query parameter is present
   useEffect(() => {
     const shouldLoadSession = searchParams.get("loadSession")
     if (shouldLoadSession === "true" && status === "authenticated") {
-      handleLoadLastSession()
+      const user = session?.user as any
+      if (user?.role !== "supplier") {
+        handleLoadLastSession()
+      }
     }
-  }, [searchParams, status])
+  }, [searchParams, status, session])
 
   // Function to load last session
   const handleLoadLastSession = async () => {
@@ -105,8 +113,8 @@ function SearchGPTContent() {
     }
   }
 
-  // Show loading while checking auth
-  if (status === "loading") {
+  // Show loading while checking auth or if supplier is being redirected
+  if (status === "loading" || (status === "authenticated" && (session?.user as any)?.role === "supplier")) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
         <div className="text-center">
@@ -167,11 +175,10 @@ function SearchGPTContent() {
         location,
         price_min: parseFloat(priceMin) || 0,
         price_max: parseFloat(priceMax) || 10000,
+        useDetailed,
       }
 
-      const response = useDetailed
-        ? await searchSuppliersDetailed(params)
-        : await searchSuppliers(params)
+      const response = await searchSuppliersCombined(params)
 
       if (response.success) {
         setSuppliers(response.suppliers)
@@ -208,16 +215,29 @@ function SearchGPTContent() {
 
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center gap-6">
-              <span className="text-base font-medium text-slate-700">{session.user?.name}</span>
-              <Button
-                onClick={() => {
-                  router.push("/rfp-dashboard")
-                }}
-                variant="ghost"
-                className="text-sm px-4 py-2"
-              >
-                RFP Dashboard
-              </Button>
+              <Link href="/buyer/profile" className="text-base font-medium text-slate-700 hover:text-blue-600 transition-colors cursor-pointer">
+                {session.user?.name}
+              </Link>
+              <div className="flex items-center gap-0">
+                <Button
+                  onClick={() => {
+                    router.push("/supplier-search")
+                  }}
+                  variant="ghost"
+                  className="text-sm px-4 py-2"
+                >
+                  Supplier Search
+                </Button>
+                <Button
+                  onClick={() => {
+                    router.push("/rfp-dashboard")
+                  }}
+                  variant="ghost"
+                  className="text-sm px-4 py-2"
+                >
+                  RFP Dashboard
+                </Button>
+              </div>
               <Button
                 onClick={() => {
                   signOut({ callbackUrl: "/" })
@@ -260,6 +280,16 @@ function SearchGPTContent() {
                 <div className="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-50 rounded-lg">
                   {session.user?.name}
                 </div>
+                <Button
+                  onClick={() => {
+                    router.push("/supplier-search")
+                    setMobileMenuOpen(false)
+                  }}
+                  variant="ghost"
+                  className="justify-start text-sm px-4 py-2"
+                >
+                  Supplier Search
+                </Button>
                 <Button
                   onClick={() => {
                     router.push("/rfp-dashboard")
@@ -439,9 +469,16 @@ function SearchGPTContent() {
                     {/* Header */}
                     <div className="flex justify-between items-start mb-4">
                       <div className="flex-1">
-                        <h3 className="text-xl font-bold text-slate-900 mb-1">
-                          {supplier.name}
-                        </h3>
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="text-xl font-bold text-slate-900">
+                            {supplier.name}
+                          </h3>
+                          {supplier.source === "internal" && (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 border border-green-300">
+                              ✓ Registered Supplier
+                            </span>
+                          )}
+                        </div>
                         <p className="text-slate-600 text-sm">{supplier.location}</p>
                       </div>
                       <div className="text-right ml-4">

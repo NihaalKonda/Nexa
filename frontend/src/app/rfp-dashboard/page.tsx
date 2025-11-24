@@ -24,12 +24,17 @@ export default function RFPDashboard() {
   const [error, setError] = useState("")
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-  // Redirect to signin if not authenticated
+  // Redirect to signin if not authenticated or redirect suppliers to their profile
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/auth/signin")
+    } else if (status === "authenticated") {
+      const user = session?.user as any
+      if (user?.role === "supplier") {
+        router.push("/supplier/profile")
+      }
     }
-  }, [status, router])
+  }, [status, session, router])
 
   // Fetch RFPs
   useEffect(() => {
@@ -109,16 +114,29 @@ export default function RFPDashboard() {
 
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center gap-6">
-              <span className="text-base font-medium text-slate-700">{session.user?.name}</span>
-              <Button
-                onClick={() => {
-                  router.push("/supplier-search")
-                }}
-                variant="ghost"
-                className="text-sm px-4 py-2"
-              >
-                Supplier Search
-              </Button>
+              <Link href="/buyer/profile" className="text-base font-medium text-slate-700 hover:text-blue-600 transition-colors cursor-pointer">
+                {session.user?.name}
+              </Link>
+              <div className="flex items-center gap-0">
+                <Button
+                  onClick={() => {
+                    router.push("/supplier-search")
+                  }}
+                  variant="ghost"
+                  className="text-sm px-4 py-2"
+                >
+                  Supplier Search
+                </Button>
+                <Button
+                  onClick={() => {
+                    router.push("/rfp-dashboard")
+                  }}
+                  variant="ghost"
+                  className="text-sm px-4 py-2"
+                >
+                  RFP Dashboard
+                </Button>
+              </div>
               <Button
                 onClick={() => {
                   signOut({ callbackUrl: "/" })
@@ -170,6 +188,16 @@ export default function RFPDashboard() {
                   className="justify-start text-sm px-4 py-2"
                 >
                   Supplier Search
+                </Button>
+                <Button
+                  onClick={() => {
+                    router.push("/rfp-dashboard")
+                    setMobileMenuOpen(false)
+                  }}
+                  variant="ghost"
+                  className="justify-start text-sm px-4 py-2"
+                >
+                  RFP Dashboard
                 </Button>
                 <Button
                   onClick={() => {

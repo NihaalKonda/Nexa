@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { markdown, filename, htmlContent, pdfContent, title } = body
+    const { markdown, filename, htmlContent, pdfContent, title, supplierId, supplierName } = body
 
     // Get company ID from session
     const companyId = (session.user as any).companyId
@@ -32,6 +32,8 @@ export async function POST(request: NextRequest) {
         pdfContent: pdfContent ? Buffer.from(pdfContent, 'base64') : null,
         draftJson: {}, // Empty for now, can be populated later
         status: "draft",
+        supplierId: supplierId || null,
+        supplierName: supplierName || null,
       },
     })
 

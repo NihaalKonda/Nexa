@@ -17,11 +17,22 @@ export async function GET(
     const { searchParams } = new URL(req.url)
     const format = searchParams.get('format') || 'pdf'
 
+    // Check user role to determine access permissions
+    const userRole = (session.user as any).role
+
+    // Build where clause based on role
+    const whereClause: any = { id }
+
+    if (userRole === 'supplier') {
+      // Suppliers can only view RFPs generated for them
+      whereClause.supplierId = (session.user as any).supplierId
+    } else {
+      // Buyers can only view their own RFPs
+      whereClause.companyId = (session.user as any).companyId
+    }
+
     const rfp = await prisma.rFP.findFirst({
-      where: {
-        id,
-        companyId: (session.user as any).companyId,
-      },
+      where: whereClause,
       include: {
         company: {
           select: {

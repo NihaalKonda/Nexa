@@ -10,6 +10,11 @@ export default async function DashboardPage() {
     redirect("/auth/signin")
   }
 
+  const user = session.user as any
+  if (user?.role === "supplier") {
+    redirect("/supplier/profile")
+  }
+
   return (
     <div className="min-h-screen p-8">
       <div className="max-w-6xl mx-auto">

@@ -54,7 +54,7 @@ const Benefits = () => {
               </li>
             </ul>
 
-            <Link href="/auth/signup">
+            <Link href="/auth/signup/buyer">
               <Button variant="hero" className="w-full" size="lg">
                 Start Sourcing
               </Button>
@@ -95,7 +95,7 @@ const Benefits = () => {
               </li>
             </ul>
 
-            <Link href="/auth/signup">
+            <Link href="/auth/signup/supplier">
               <Button variant="outline" className="w-full" size="lg">
                 Join as Supplier
               </Button>

@@ -56,11 +56,15 @@ model Company {
 model Supplier {
   id                  String    @id @default(cuid())
   name                String
+  slug                String    @unique // URL-friendly version (e.g., "acme-corp" for profile URLs)
+  contactEmail        String    @unique // Required for authentication
+  password            String    // Hashed password for supplier login (required)
+  industry            String?
   website             String?
-  contactEmail        String?
   contactPhone        String?
   address             String?
   city                String?
+  state               String?
   country             String?
   certificationsJson  Json?     @db.JsonB  // ISO, CE, etc.
   rating              Float?    @default(0)
@@ -71,6 +75,8 @@ model Supplier {
   updatedAt           DateTime  @updatedAt
 
   @@index([name])
+  @@index([contactEmail])
+  @@index([slug])
   @@index([country])
   @@index([verified])
 }
@@ -135,25 +141,28 @@ model SearchQuery {
 }
 
 model RFP {
-  id         String     @id @default(cuid())
-  company    Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  companyId  String
-  session    Session?   @relation(fields: [sessionId], references: [id], onDelete: SetNull)
-  sessionId  String?
-  title      String
-  bodyMd     String     @db.Text
-  draftJson  Json       @db.JsonB
-  status     String     @default("draft") // draft, published, archived
-  pdfContent Bytes?     // Store PDF binary content
-  htmlContent String?   @db.Text // Store HTML version for viewing
-  filename   String?    // Original filename for downloads
-  shares     RFPShare[]
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
+  id           String     @id @default(cuid())
+  company      Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId    String
+  session      Session?   @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  sessionId    String?
+  supplierId   String?    // Link to supplier if RFP is for internal supplier
+  supplierName String?    // Store supplier name for display (even if not internal)
+  title        String
+  bodyMd       String     @db.Text
+  draftJson    Json       @db.JsonB
+  status       String     @default("draft") // draft, published, archived
+  pdfContent   Bytes?     // Store PDF binary content
+  htmlContent  String?    @db.Text // Store HTML version for viewing
+  filename     String?    // Original filename for downloads
+  shares       RFPShare[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 
   @@index([companyId])
   @@index([sessionId])
   @@index([status])
+  @@index([supplierId])
 }
 
 model RFPShare {
