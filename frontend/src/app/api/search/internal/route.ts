@@ -124,9 +124,8 @@ export async function POST(req: NextRequest) {
 
     let suppliers = Array.from(supplierMap.values())
 
-    // If useDetailed is true, use Flask backend's sophisticated scoring
+    // If useDetailed is true, fetch contracts and reviews for each supplier
     if (useDetailed) {
-      // Fetch detailed data for all suppliers and use Flask's ranking algorithm
       suppliers = await Promise.all(
         suppliers.map(async (supplier) => {
           try {
@@ -179,50 +178,44 @@ export async function POST(req: NextRequest) {
           }
         })
       )
+    }
 
-      // Use Flask backend's rank_suppliers endpoint to score all suppliers at once
-      try {
-        const rankResponse = await fetch(`${API_BASE_URL}/api/rank`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            suppliers,
-            search_product: product,
-            search_location: location || "",
-            price_min: price_min || 0,
-            price_max: price_max || 10000,
-          }),
-        })
+    // Always use Flask backend's rank_suppliers endpoint to score all suppliers
+    try {
+      const rankResponse = await fetch(`${API_BASE_URL}/api/rank`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          suppliers,
+          search_product: product,
+          search_location: location || "",
+          price_min: price_min || 0,
+          price_max: price_max || 10000,
+        }),
+      })
 
-        if (rankResponse.ok) {
-          const rankedData = await rankResponse.json()
-          // Add 7.5 bonus points for being in internal database
-          suppliers = rankedData.suppliers.map((s: any) => ({
-            ...s,
-            score: Math.min((s.score || 0) + 12, 100), // Add internal bonus, cap at 100
-          }))
-        } else {
-          // Fallback: if ranking fails, give default score with internal bonus
-          suppliers = suppliers.map(s => ({
-            ...s,
-            score: 85,
-          }))
-        }
-      } catch (err) {
-        console.error("Error ranking suppliers:", err)
-        // Fallback: give default score with internal bonus
+      if (rankResponse.ok) {
+        const rankedData = await rankResponse.json()
+        // Add 12 bonus points for being in internal database
+        suppliers = rankedData.suppliers.map((s: any) => ({
+          ...s,
+          score: Math.min((s.score || 0) + 12, 100), // Add internal bonus, cap at 100
+        }))
+      } else {
+        // Fallback: if ranking fails, give default score with internal bonus
         suppliers = suppliers.map(s => ({
           ...s,
           score: 85,
         }))
       }
-    } else {
-      // If not detailed, still add bonus points for being in internal database
+    } catch (err) {
+      console.error("Error ranking suppliers:", err)
+      // Fallback: give default score with internal bonus
       suppliers = suppliers.map(s => ({
         ...s,
-        score: 85, // Base score + internal database bonus
+        score: 85,
       }))
     }
 

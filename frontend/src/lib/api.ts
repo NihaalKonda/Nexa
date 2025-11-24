@@ -15,6 +15,7 @@ export interface Supplier {
   reviews_mentions?: string
   score?: number
   source?: "internal" | "gpt"
+  supplierId?: string
 }
 
 interface SearchParams {

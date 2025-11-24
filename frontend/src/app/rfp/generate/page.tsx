@@ -159,6 +159,8 @@ function GenerateRFPContent() {
             htmlContent: null,
             pdfContent: data.pdf_content, // Save PDF content from backend
             title: title || `RFP for ${supplier?.name || 'Supplier'}`,
+            supplierId: supplier?.supplierId || null,
+            supplierName: supplier?.name || null,
           }),
         })
 

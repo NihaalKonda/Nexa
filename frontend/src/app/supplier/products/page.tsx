@@ -247,6 +247,13 @@ export default function SupplierProducts() {
                 Products
               </Button>
               <Button
+                onClick={() => router.push("/supplier/rfps")}
+                variant="ghost"
+                className="text-sm px-4 py-2"
+              >
+                RFPs
+              </Button>
+              <Button
                 onClick={() => signOut({ callbackUrl: "/" })}
                 variant="ghost"
                 className="text-red-600 hover:text-red-700 text-sm px-4 py-2"
@@ -295,6 +302,16 @@ export default function SupplierProducts() {
                   className="justify-start text-sm px-4 py-2"
                 >
                   Products
+                </Button>
+                <Button
+                  onClick={() => {
+                    router.push("/supplier/rfps")
+                    setMobileMenuOpen(false)
+                  }}
+                  variant="ghost"
+                  className="justify-start text-sm px-4 py-2"
+                >
+                  RFPs
                 </Button>
                 <Button
                   onClick={() => signOut({ callbackUrl: "/" })}
