@@ -37,14 +37,28 @@ export async function PUT(req: Request) {
     console.log("Updating supplier with ID:", user.supplierId)
     console.log("Update data:", { name, contactEmail, industry, website, contactPhone, description, city, state, country })
 
-    // Get current supplier to check if name changed
+    // Get current supplier to check if name or email changed
     const currentSupplier = await prisma.supplier.findUnique({
       where: { id: user.supplierId },
-      select: { name: true, slug: true }
+      select: { name: true, slug: true, contactEmail: true }
     })
 
     if (!currentSupplier) {
       return NextResponse.json({ error: "Supplier not found" }, { status: 404 })
+    }
+
+    // Check if contactEmail is being changed and if it already exists
+    if (contactEmail && contactEmail !== currentSupplier.contactEmail) {
+      const existingSupplier = await prisma.supplier.findFirst({
+        where: {
+          contactEmail,
+          id: { not: user.supplierId }
+        }
+      })
+
+      if (existingSupplier) {
+        return NextResponse.json({ error: "This email is already in use by another supplier" }, { status: 400 })
+      }
     }
 
     // Generate slug from name only if name changed

@@ -120,7 +120,7 @@ export default function BuyerProfile() {
       <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100">
         <div className="container mx-auto px-3 md:px-6 py-3 md:py-4">
           <div className="flex items-center justify-between">
-            <Link href="/supplier-search" className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
+            <Link href="/buyer/profile" className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
               <Image
                 src="/nexa_logo.png"
                 alt="Nexa Logo"
@@ -138,13 +138,26 @@ export default function BuyerProfile() {
               <Link href="/buyer/profile" className="text-base font-medium text-slate-700 hover:text-blue-600 transition-colors cursor-pointer">
                 {session?.user?.name}
               </Link>
-              <Button
-                onClick={() => router.push("/rfp-dashboard")}
-                variant="ghost"
-                className="text-sm px-4 py-2"
-              >
-                RFP Dashboard
-              </Button>
+              <div className="flex items-center gap-0">
+                <Button
+                  onClick={() => {
+                    router.push("/supplier-search")
+                  }}
+                  variant="ghost"
+                  className="text-sm px-4 py-2"
+                >
+                  Supplier Search
+                </Button>
+                <Button
+                  onClick={() => {
+                    router.push("/rfp-dashboard")
+                  }}
+                  variant="ghost"
+                  className="text-sm px-4 py-2"
+                >
+                  RFP Dashboard
+                </Button>
+              </div>
               <Button
                 onClick={() => signOut({ callbackUrl: "/" })}
                 variant="ghost"
@@ -186,7 +199,20 @@ export default function BuyerProfile() {
                   {session?.user?.name}
                 </div>
                 <Button
-                  onClick={() => router.push("/rfp-dashboard")}
+                  onClick={() => {
+                    router.push("/supplier-search")
+                    setMobileMenuOpen(false)
+                  }}
+                  variant="ghost"
+                  className="justify-start text-sm px-4 py-2"
+                >
+                  Supplier Search
+                </Button>
+                <Button
+                  onClick={() => {
+                    router.push("/rfp-dashboard")
+                    setMobileMenuOpen(false)
+                  }}
                   variant="ghost"
                   className="justify-start text-sm px-4 py-2"
                 >

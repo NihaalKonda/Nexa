@@ -33,6 +33,30 @@ export async function PUT(req: Request) {
     console.log("Updating company with ID:", user.companyId)
     console.log("Update data:", { name, email, industry, city, state, country })
 
+    // Get current company to check if email changed
+    const currentCompany = await prisma.company.findUnique({
+      where: { id: user.companyId },
+      select: { email: true }
+    })
+
+    if (!currentCompany) {
+      return NextResponse.json({ error: "Company not found" }, { status: 404 })
+    }
+
+    // Check if email is being changed and if it already exists
+    if (email && email !== currentCompany.email) {
+      const existingCompany = await prisma.company.findFirst({
+        where: {
+          email,
+          id: { not: user.companyId }
+        }
+      })
+
+      if (existingCompany) {
+        return NextResponse.json({ error: "This email is already in use by another company" }, { status: 400 })
+      }
+    }
+
     // Update company in database
     const updatedCompany = await prisma.company.update({
       where: {
